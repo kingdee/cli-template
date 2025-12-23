@@ -1,0 +1,187 @@
+import kwc from '@kdcloudjs/kwc-rollup-plugin';
+import replace from '@rollup/plugin-replace';
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import serve from 'rollup-plugin-serve';
+import livereload from 'rollup-plugin-livereload';
+import { terser } from 'rollup-plugin-terser';
+import { readdirSync, existsSync, rmSync, mkdirSync, writeFileSync } from 'fs';
+import path, { join } from 'path';
+import alias from '@rollup/plugin-alias';
+import copy from 'rollup-plugin-copy';
+
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+/**
+ * 清理 dist（仅 build 阶段）
+ */
+function cleanDist({ dir = 'dist', enabled = true } = {}) {
+  return {
+    name: 'clean-dist',
+    buildStart() {
+      if (!enabled) return
+      if (existsSync(dir)) {
+        rmSync(dir, { recursive: true, force: true })
+        console.log(`[rollup] cleaned ${dir}`)
+      }
+    }
+  }
+}
+
+const getComponentEntries = () => {
+ const componentsDir = 'app/kwc';
+ const componentFolders = readdirSync(componentsDir, { withFileTypes: true })
+  .filter(dirent => dirent.isDirectory())
+  .map(dirent => dirent.name);
+ const entries = {};
+ for (const folder of componentFolders) {
+  const filePath = join(componentsDir, folder, `${folder}.js`)
+  if (existsSync(filePath)) {
+   entries[`kwc/${folder}`] = filePath;
+  }
+ }
+ return entries;
+}
+
+// 🔑 新增 watchCss 插件：保证 .css 文件修改时 rollup 会重新编译
+function watchCss() {
+ return {
+  name: 'watch-css',
+  load(id) {
+   if (id.endsWith('.css')) {
+    this.addWatchFile(id);
+   }
+   return null;
+  }
+ };
+}
+
+function kdBaseComponentResolver() {
+  return {
+    name: 'kd-base-component-resolver',
+
+    resolveId(source, importer) {
+      // 匹配 kd/xxx
+      if (source.startsWith('kd/')) {
+        const compName = source.slice(3); // 去掉 "kd/"
+        return path.resolve(
+          process.cwd(),
+          'node_modules/@kdcloudjs/kingdee-base-components/dist/esm/kd',
+          `${compName}.js`
+        );
+      }
+      return null;
+    }
+  };
+}
+
+export default (args) => {
+ // 开发模式使用单一入口以支持开发服务器
+ const isDev = args.watch;
+
+
+ const kwcBundle = {
+  input: isDev ? 'app/kwc/main.js' : getComponentEntries(),
+  output: isDev ? [
+   {
+    dir: 'dist',
+    format: 'esm',
+    entryFileNames: 'index.js',
+    sourcemap: !isProduction
+   }
+  ] : [
+   {
+    // ESM格式 - 支持Tree Shaking
+    dir: 'dist',
+    format: 'esm',
+    sourcemap: !isProduction,
+    entryFileNames: '[name]/index.js',
+    preserveModules: false
+   }
+  ],
+  plugins: [
+    // 🔥 仅生产 build 清 dist
+    cleanDist({
+      dir: 'dist',
+      enabled: !isDev
+    }),
+   kdBaseComponentResolver(),
+   alias({
+    entries: [
+     { find: 'kingdee', replacement: resolve('node_modules/@kdcloudjs/kwc-shared-utils') }
+    ]
+   }),
+   replace({
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    preventAssignment: true
+   }),
+   // 确保在 kwc() 之前加上 watchCss
+   isDev && watchCss(),
+   kwc({ rootDir: 'app/kwc' }),
+   resolve(),
+   commonjs({
+    include: ['node_modules/@kdcloudjs/kwc-shared-utils/**', 'node_modules/@kdcloudjs/kwc-i18n/**']
+   }),
+   args.watch &&
+   serve({
+    open: false,
+    port: 8000,
+    contentBase: ['dist']
+   }),
+   args.watch && livereload('dist'),
+   // 复制静态资源
+   isDev && copy({
+    targets: [
+     { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' }
+    ]
+   }),
+   isDev && {
+  name: 'ensure-index-html',
+  generateBundle(options, bundle) {
+    const outDir = options.dir || path.dirname(options.file)
+    const htmlFile = path.join(outDir, 'index.html')
+
+    // 如果 dist/index.html 已存在就跳过
+    if (existsSync(htmlFile)) return
+
+    // 确保目录存在
+    mkdirSync(outDir, { recursive: true })
+
+    // 写入内容
+    const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>KWC Dev</title>
+    <link rel="stylesheet" href="/index.css"/>
+  </head>
+  <body>
+    <script type="module" src="/index.js"></script>
+  </body>
+</html>`
+    writeFileSync(htmlFile, html)
+    console.log('[ensure-index-html] 已生成 dist/index.html')
+  }},
+   // 生产环境压缩代码
+   isProduction && terser({
+    compress: {
+     drop_console: true,
+     drop_debugger: true
+    },
+    mangle: {
+     reserved: ['KingdeeBaseComponents']
+    }
+   })
+  ].filter(Boolean),
+  external: isDev ? [] : ['@kdcloudjs/kwc'],
+  // 警告处理
+  onwarn(warning, warn) {
+   // 忽略某些警告
+   if (warning.code === 'THIS_IS_UNDEFINED') return;
+   warn(warning);
+  }
+ }
+
+ return [kwcBundle]
+}

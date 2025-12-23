@@ -1,0 +1,3 @@
+{
+    "extends": "@kdcloudjs/eslint-config-kwc/recommended"
+}
