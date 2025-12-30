@@ -4,7 +4,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import { readdirSync, existsSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import path, { join } from 'path';
 import alias from '@rollup/plugin-alias';

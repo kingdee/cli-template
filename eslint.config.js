@@ -5,7 +5,7 @@ const kingdeeKwcConfig = require('@kdcloudjs/eslint-config-kwc/recommended')
 
 module.exports = defineConfig([
   {
-    files: ['src/**/*.js'],
+    files: ['app/kwc/**/*.js'],
     extends: [kingdeeKwcConfig],
     rules: {
       'jest/no-deprecated-functions': 'off',
