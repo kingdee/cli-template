@@ -2,6 +2,7 @@
  "name": "@kdcloudjs/kwc-template",
  "version": "1.0.0",
  "description": "kwc template",
+ "type": "module",
  "scripts": {
   "build": "cross-env NODE_ENV=production rollup -c rollup.config.js",
   "dev": "rollup -c rollup.config.js --watch",

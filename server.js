@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-const express = require('express')
-const fs = require('fs')
-const path = require('path')
-const chokidar = require('chokidar')
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import chokidar from 'chokidar';
 
 const app = express()
-const PORT = 3000
+const PORT = 3333
 
 const CWD = process.cwd()
 const KD_CONFIG_PATH = path.join(CWD, '.kd', 'config.json')
