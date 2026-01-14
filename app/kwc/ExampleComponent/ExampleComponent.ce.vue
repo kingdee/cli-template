@@ -4,7 +4,7 @@ import { ref } from 'vue';
 const inputValue = ref('');
 
 const handleLog = () => {
-  console.log('Input Value:', inputValue.value);
+  console.log('Input Value: ', inputValue.value);
 };
 </script>
 
