@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
@@ -23,7 +22,7 @@ export default defineConfig({
   build: {
     minify: 'esbuild',
     lib: {
-      entry: resolve(__dirname, 'app/main.ts'),
+      entry: resolve(__dirname, 'app/main.js'),
       name: 'KwcTemplateVue',
       fileName: (format) => `kwc-template-vue.${format}.js`,
       formats: ['es']

@@ -1,97 +1,96 @@
-# KWC Vue 3 Web Component Template (JavaScript)
+# KWC Vue 3 Web Component 模板 (JavaScript 版)
 
-This template project is configured to build Vue 3 components as standard Web Components (KWC - Kingdee Web Component).
+该模板项目配置为将 Vue 3 组件构建为标准的 Web Components (KWC - Kingdee Web Component)。
 
-## Features
+## 特性
 
-- **Vue 3 SFC**: Build native Web Components using Vue 3 Single File Components (`.ce.vue`).
-- **Vite Lib Mode**: Optimized library build focusing on ES modules.
-- **JavaScript**: Pure JavaScript development for simplicity and flexibility.
-- **Vitest**: Modern unit testing setup with JSDOM.
+- **Vue 3 SFC**: 使用 Vue 3 单文件组件 (`.ce.vue`) 构建原生 Web Components。
+- **Vite 库模式**: 针对 ES 模块优化的库构建模式。
+- **JavaScript**: 纯 JavaScript 开发，降低上手门槛。
+- **Vitest**: 基于 JSDOM 的现代单元测试设置。
 
-## Development
+## 开发
 
 ```bash
-# Install dependencies
+# 安装依赖
 npm install
 
-# Start development server
+# 启动开发服务器
 npm run dev
 
-# Run unit tests
+# 运行单元测试
 npm run test
 ```
 
-## Build
+## 构建
 
 ```bash
 npm run build
 ```
 
-The build process produces:
-- `dist/kwc-template-vue.es.js`: A compact, minified ES module containing the custom element and registration logic.
+构建过程会生成：
+- `dist/kwc-template-vue.es.js`: 一个紧凑、经过压缩的 ES 模块，包含自定义元素和注册逻辑。
 
-## Usage
+## 使用方法
 
-The library exports a `register` function and the raw `Element` constructor. After uploading the build artifacts to the Cosmic Platform (苍穹平台) via the CLI, you can use the component in the platform.
+该库导出一个 `register` 函数和原始的 `Element` 构造函数。通过脚手架将构建产物上传至苍穹平台后，即可在苍穹平台中使用该组件。
 
-## Project Structure
+## 项目结构
 
-- `app/kwc/`: Contains KWC components.
-  - `ExampleComponent/`: Example implementation of a KWC component.
-- `app/main.js`: Entry point that exports the component constructor and registration utility.
-- `vite.config.js`: Configuration for Vite build, minification, and Vue SFC handling.
+- `app/kwc/`: 包含 KWC 组件。
+  - `ExampleComponent/`: KWC 组件的示例实现。
+- `app/main.js`: 入口文件，导出组件构造函数和注册工具。
+- `vite.config.js`: Vite 构建配置，包含压缩和 Vue SFC 处理。
 
-## Guidelines
+## 其他事项
 
-### Component Naming
+### 组件命名
 
-- Component filenames must end with the `.ce.vue` suffix, e.g., `ExampleComponent.ce.vue`.
-- Component tag names must follow the custom element naming convention (hyphen-separated), e.g., `vue-element`.
+- 组件文件名需要以 `.ce.vue` 后缀结尾，例如 `ExampleComponent.ce.vue`。
+- 组件标签名需要遵循自定义元素命名规范，以连字符分隔，例如 `vue-element`。
 
-### Context Information
+### 上下文信息
 
-You can access the form's context information via `props.config`. First, define `props` in the component's `<script>` tag:
+通过 `props.config` 可以获取到表单的上下文信息。首先，在组件的 `<script>` 标签中定义 `props`：
 
 ```javascript
 const props = defineProps();
 ```
+苍穹平台表单会通过 `props` 传入 `config` 对象，其它包含了如下信息：
 
-The Cosmic Platform form passes the `config` object via `props`, which contains the following information:
+- `config.metaProps`: 包含了组件元数据中传递的属性。
+- `config.context.dispatchAction`: 用于触发苍穹平台表单的操作，如展示弹窗或其它需要与表单插件交互的操作。
+- `config.context.data`: 上下文页面数据。
+- `config.context.getData`: 上下文数据的 `getter` 方法，可用于获取实时数据
+- `config.context.addDataChangeListener`: 用于添加数据变化监听器，当上下文数据发生变化时会触发回调。
+- `config.context.close`: 用于关闭当前表单。
+- `config.pageId`: 当前表单的页面 ID。
+- `config.formId`: 当前表单的表单 ID。
+- `config.controlId`: 当前组件的控件 ID。
+- `config.isvId`: 当前组件的 ISV ID。
+- `config.moduleId`: 当前组件的模块 ID。
 
-- `config.metaProps`: Properties passed from the component metadata.
-- `config.context.dispatchAction`: Used to trigger Cosmic Platform form actions, such as showing modals or interacting with form plugins.
-- `config.context.data`: Context page data.
-- `config.context.getData`: Getter method for context data, used to retrieve real-time data.
-- `config.context.addDataChangeListener`: Used to add a data change listener, triggering a callback when context data changes.
-- `config.context.close`: Used to close the current form.
-- `config.pageId`: Current form's Page ID.
-- `config.formId`: Current form's Form ID.
-- `config.controlId`: Current component's Control ID.
-- `config.isvId`: Current component's ISV ID.
-- `config.moduleId`: Current component's Module ID.
-
-### Accessing Context Data
+### 获取上下文数据
 
 ```js
 const props = defineProps(['config']);
 const contextData = ref(null);
 
-watchEffect((onCleanup) => {
+watchEffect(() => {
   const propContext = props.config?.context;
   if (propContext) {
-    // 1. Initialize context data
+    // 1. 初始化上下文数据
     contextData.value = propContext.data;
 
-    // 2. Add data change listener
+    // 2. 添加数据变化监听器
     if (propContext.addDataChangeListener) {
-      const removeListener = propContext.addDataChangeListener((event) => {
-        // 3. Handle context data change
+      const removeListener = propContext.addDataChangeListener((event: KwcDataChangeEvent) => {
+        // 3. 处理上下文数据变化
         contextData.value = event.data;
       });
 
-      // 4. Remove listener when component is destroyed or dependencies change
-      onCleanup(() => {
+      // 4. 组件销毁时移除监听器
+      onWatchedCleanup(() => {
         removeListener();
       })
     }
@@ -99,41 +98,41 @@ watchEffect((onCleanup) => {
 })
 ```
 
-### Opening Forms
+### 打开表单
 
-When used in the Cosmic Platform, if you need to open other platform forms, you need to import the `@kdcloudjs/kwc-shared-utils` library. This library provides the `showForm` method.
+在苍穹平台中使用时，如需打开其它苍穹平台的表单， 需要引入 `@kdcloudjs/kwc-shared-utils` 库。该库提供了 `showForm` 方法，用于打开其它表单。
 
 ```javascript
 import { showForm } from '@kdcloudjs/kwc-shared-utils/sendBosPlatformEvent';
 
-// Assuming another form is opened after clicking a button
+// 假设点击某个按钮后打开另一个表单
 const handleClick = () => {
   const formConfig = {
-    parentPageId: props.config.pageId, // Current Page ID
-    formId: 'another-form-id', // Target Form ID
+    parentPageId: props.config.pageId, // 当前页面Id
+    formId: 'another-form-id', // 目标表单Id
     params: {
-      openStyle: { showType: 6 }, // Open style
-      // ... other parameters
+      openStyle: { showType: 6 }, // 打开表单的方式
+      // ... 其他参数
     }
   };
 
   const urlConfig = {
-    app: props.config.app, // App ID
-    callBackId: '' // Callback ID, passed if a callback is needed when the target page closes
+    app: props.config.app, // 应用Id,
+    callBackId: '' // 回调函数Id，当目标页面关闭时如需回调时传入
   }
 
   showForm(formConfig, urlConfig);
 }
 ```
 
-### Closing Forms
+### 关闭表单
 
-To close the form where the current component resides, call the `config.context.close` method. This method closes the current form and triggers the callback function.
+要关闭当前组件所在的表单时，需要调用 `config.context.close` 方法。该方法会关闭当前表单，并触发回调函数。
 
 ```javascript
-// Assuming the current form is closed after clicking a button
+// 假设点击某个按钮后关闭当前表单
 const handleClick = () => {
-  // If you need to pass callback parameters to the parent page
+  // 需要回调参数给父级页面时，可以传入参数
   const callbackParams = {
     // ...
   }
@@ -147,6 +146,7 @@ const handleClick = () => {
 // ExampleComponent.ce.vue
 <script setup>
 import { ref, watchEffect } from 'vue';
+import type { KwcConfig, KwcDataChangeEvent } from '../types';
 import { showForm } from '@kdcloudjs/kwc-shared-utils/sendBosPlatformEvent';
 
 import '@kdcloudjs/shoelace/dist/components/button/button.js';
@@ -157,21 +157,21 @@ import '@kdcloudjs/shoelace/dist/components/input/input.js';
 const props = defineProps(['config']);
 const contextData = ref(null);
 
-watchEffect((onCleanup) => {
+watchEffect(() => {
   const propContext = props.config?.context;
   if (propContext) {
-    // 1. Initialize context data
+    // 1. 初始化上下文数据
     contextData.value = propContext.data;
 
-    // 2. Add data change listener
+    // 2. 添加数据变化监听器
     if (propContext.addDataChangeListener) {
-      const removeListener = propContext.addDataChangeListener((event) => {
-        // 3. Handle context data change
+      const removeListener = propContext.addDataChangeListener((event: KwcDataChangeEvent) => {
+        // 3. 处理上下文数据变化
         contextData.value = event.data;
       });
 
-      // 4. Remove listener when component is destroyed
-      onCleanup(() => {
+      // 4. 组件销毁时移除监听器
+      onWatchedCleanup(() => {
         removeListener();
       })
     }
