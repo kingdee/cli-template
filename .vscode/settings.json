@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "*.tsx": "typescriptreact",
+    "*.ts": "typescript"
+  },
+  "editor.formatOnSave": true,
+  "eslint.enable": false,
+  "javascript.validate.enable": false,
+  "typescript.validate.enable": true
+}
