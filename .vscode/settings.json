@@ -1,10 +1,11 @@
 {
-  "files.associations": {
-    "*.tsx": "typescriptreact",
-    "*.ts": "typescript"
-  },
+  "eslint.useFlatConfig": true,
   "editor.formatOnSave": true,
-  "eslint.enable": false,
-  "javascript.validate.enable": false,
-  "typescript.validate.enable": true
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact"
+  ]
 }
