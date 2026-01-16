@@ -1,58 +1,58 @@
-# KWC Vue 3 Web Component Template (TypeScript)
+# KWC Vue 3 Web Component 模板 (TypeScript 版)
 
-This template project is configured to build Vue 3 components as standard Web Components (KWC - Kingdee Web Component).
+该模板项目配置为将 Vue 3 组件构建为标准的 Web Components (KWC - Kingdee Web Component)。
 
-## Features
+## 特性
 
-- **Vue 3 SFC**: Build native Web Components using Vue 3 Single File Components (`.ce.vue`).
-- **Vite Lib Mode**: Optimized library build focusing on ES modules.
-- **TypeScript**: Full type support, providing type safety and better development experience.
-- **Vitest**: Modern unit testing setup with JSDOM.
+- **Vue 3 SFC**: 使用 Vue 3 单文件组件 (`.ce.vue`) 构建原生 Web Components。
+- **Vite 库模式**: 针对 ES 模块优化的库构建模式。
+- **TypeScript**: 完整的类型支持，提供类型安全和更好的开发体验。
+- **Vitest**: 基于 JSDOM 的现代单元测试设置。
 
-## Development
+## 开发
 
 ```bash
-# Install dependencies
+# 安装依赖
 npm install
 
-# Start development server
+# 启动开发服务器
 npm run dev
 
-# Run unit tests
+# 运行单元测试
 npm run test
 ```
 
-## Build
+## 构建
 
 ```bash
 npm run build
 ```
 
-The build process will generate:
-- `dist/kwc-template-vue.es.js`: A compact, minified ES module containing the custom element and registration logic.
+构建过程会生成：
+- `dist/kwc-template-vue.es.js`: 一个紧凑、经过压缩的 ES 模块，包含自定义元素和注册逻辑。
 
-## Usage
+## 使用方法
 
-The library exports a `register` function and the raw `Element` constructor. Once the build artifact is uploaded to the Cosmic platform via the CLI, the component can be used within the Cosmic platform.
+该库导出一个 `register` 函数和原始的 `Element` 构造函数。通过脚手架将构建产物上传至苍穹平台后，即可在苍穹平台中使用该组件。
 
-## Project Structure
+## 项目结构
 
-- `app/kwc/`: Contains KWC components.
-  - `ExampleComponent/`: Example implementation of a KWC component.
-  - `types.ts`: TypeScript type definitions for KWC context and configuration.
-- `app/main.ts`: Entry file, exporting component constructor and registration utility.
-- `vite.config.ts`: Vite build configuration, including minification and Vue SFC handling.
+- `app/kwc/`: 包含 KWC 组件。
+  - `ExampleComponent/`: KWC 组件的示例实现。
+  - `types.ts`: KWC 上下文和配置的 TypeScript 类型定义。
+- `app/main.ts`: 入口文件，导出组件构造函数和注册工具。
+- `vite.config.ts`: Vite 构建配置，包含压缩和 Vue SFC 处理。
 
-## Other Matters
+## 其他事项
 
-### Component Naming
+### 组件命名
 
-- Component filenames must end with the `.ce.vue` suffix, e.g., `ExampleComponent.ce.vue`.
-- Component tag names must follow the custom element naming convention, separated by hyphens, e.g., `vue-element`.
+- 组件文件名需要以 `.ce.vue` 后缀结尾，例如 `ExampleComponent.ce.vue`。
+- 组件标签名需要遵循自定义元素命名规范，以连字符分隔，例如 `vue-element`。
 
-### Context Information
+### 上下文信息
 
-You can access the form's context information via `props.config`. First, define `props` in the component's `<script setup lang="ts">` tag and use the `KwcConfig` type:
+通过 `props.config` 可以获取到表单的上下文信息。首先，在组件的 `<script setup lang="ts">` 标签中定义 `props`，并使用 `KwcConfig` 类型：
 
 ```typescript
 import { defineProps } from 'vue';
@@ -63,21 +63,21 @@ const props = defineProps<{
 }>();
 ```
 
-The Cosmic platform form will pass a `config` object via `props`, which contains the following information:
+苍穹平台表单会通过 `props` 传入 `config` 对象，它包含了如下信息：
 
-- `config.props`: Contains properties passed in the component metadata.
-- `config.context.dispatchAction`: Used to trigger operations on the Cosmic platform form, such as showing a modal or other interactions with form plugins.
-- `config.context.data`: Context page data.
-- `config.context.getData`: A `getter` method for context data, used to retrieve real-time data.
-- `config.context.addDataChangeListener`: Used to add a data change listener, triggering a callback when context data changes.
-- `config.context.close`: Used to close the current form.
-- `config.pageId`: The page ID of the current form.
-- `config.formId`: The form ID of the current form.
-- `config.controlId`: The control ID of the current component.
-- `config.isvId`: The ISV ID of the current component.
-- `config.moduleId`: The module ID of the current component.
+- `config.metaProps`: 包含了组件元数据中传递的属性。
+- `config.context.dispatchAction`: 用于触发苍穹平台表单的操作，如展示弹窗或其它需要与表单插件交互的操作。
+- `config.context.data`: 上下文页面数据。
+- `config.context.getData`: 上下文数据的 `getter` 方法，可用于获取实时数据。
+- `config.context.addDataChangeListener`: 用于添加数据变化监听器，当上下文数据发生变化时会触发回调。
+- `config.context.close`: 用于关闭当前表单。
+- `config.pageId`: 当前表单的页面 ID。
+- `config.formId`: 当前表单的表单 ID。
+- `config.controlId`: 当前组件的控件 ID。
+- `config.isvId`: 当前组件的 ISV ID。
+- `config.moduleId`: 当前组件的模块 ID。
 
-### Getting Context Data
+### 获取上下文数据
 
 ```typescript
 import { ref, watchEffect, onWatcherCleanup } from 'vue';
@@ -92,17 +92,17 @@ const contextData = ref<any>(null);
 watchEffect(() => {
   const propContext = props.config?.context;
   if (propContext) {
-    // 1. Initialize context data
+    // 1. 初始化上下文数据
     contextData.value = propContext.data;
 
-    // 2. Add data change listener
+    // 2. 添加数据变化监听器
     if (propContext.addDataChangeListener) {
       const removeListener = propContext.addDataChangeListener((event: KwcDataChangeEvent) => {
-        // 3. Handle context data changes
+        // 3. 处理上下文数据变化
         contextData.value = event.data;
       });
 
-      // 4. Remove listener when component is destroyed
+      // 4. 组件销毁时移除监听器
       onWatcherCleanup(() => {
         removeListener();
       })
@@ -111,41 +111,41 @@ watchEffect(() => {
 })
 ```
 
-### Opening a Form
+### 打开表单
 
-When using in the Cosmic platform, if you need to open other Cosmic platform forms, you need to import the `@kdcloudjs/kwc-shared-utils` library. This library provides the `showForm` method for opening other forms.
+在苍穹平台中使用时，如需打开其它苍穹平台的表单， 需要引入 `@kdcloudjs/kwc-shared-utils` 库。该库提供了 `showForm` 方法，用于打开其它表单。
 
 ```typescript
 import { showForm } from '@kdcloudjs/kwc-shared-utils/sendBosPlatformEvent';
 
-// Assuming another form is opened after clicking a button
+// 假设点击某个按钮后打开另一个表单
 const handleClick = () => {
   const formConfig = {
-    parentPageId: props.config?.pageId, // Current Page ID
-    formId: 'another-form-id', // Target Form ID
+    parentPageId: props.config?.pageId, // 当前页面Id
+    formId: 'another-form-id', // 目标表单Id
     params: {
-      openStyle: { showType: 6 }, // Way to open the form
-      // ... other parameters
+      openStyle: { showType: 6 }, // 打开表单的方式
+      // ... 其他参数
     }
   };
 
   const urlConfig = {
-    app: props.config?.moduleId, // Module ID or App ID
-    callBackId: '' // Callback Function ID, passed if a callback is needed when the target page closes
+    app: props.config?.moduleId, // 模块Id或应用Id
+    callBackId: '' // 回调函数Id，当目标页面关闭时如需回调时传入
   }
 
   showForm(formConfig, urlConfig);
 }
 ```
 
-### Closing a Form
+### 关闭表单
 
-To close the form where the current component resides, you need to call the `config.context.close` method. This method will close the current form and trigger the callback function.
+要关闭当前组件所在的表单时，需要调用 `config.context.close` 方法。该方法会关闭当前表单，并触发回调函数。
 
 ```typescript
-// Assuming the current form is closed after clicking a button
+// 假设点击某个按钮后关闭当前表单
 const handleClick = () => {
-  // If callback parameters are needed for the parent page, parameters can be passed
+  // 需要回调参数给父级页面时，可以传入参数
   const callbackParams = {
     // ...
   }
@@ -162,7 +162,7 @@ import { ref, watchEffect, onWatcherCleanup } from 'vue';
 import type { KwcConfig, KwcDataChangeEvent } from '../types';
 import { showForm } from '@kdcloudjs/kwc-shared-utils/sendBosPlatformEvent';
 
-// Define props and specify types
+// 定义 props 并指定类型
 const props = defineProps<{
   config?: KwcConfig
 }>();
@@ -172,17 +172,17 @@ const contextData = ref<any>(null);
 watchEffect(() => {
   const propContext = props.config?.context;
   if (propContext) {
-    // 1. Initialize context data
+    // 1. 初始化上下文数据
     contextData.value = propContext.data;
 
-    // 2. Add data change listener
+    // 2. 添加数据变化监听器
     if (propContext.addDataChangeListener) {
       const removeListener = propContext.addDataChangeListener((event: KwcDataChangeEvent) => {
-        // 3. Handle context data changes
+        // 3. 处理上下文数据变化
         contextData.value = event.data;
       });
 
-      // 4. Remove listener when component is destroyed
+      // 4. 组件销毁时移除监听器
       onWatcherCleanup(() => {
         removeListener();
       })

@@ -29,7 +29,7 @@ export interface KwcContext {
  */
 export interface KwcConfig {
   /** Original properties */
-  props: Record<string, any>;
+  metaProps: Record<string, any>;
   /** Context object */
   context: KwcContext;
   /** Page ID */
