@@ -1,55 +1,109 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import path from 'path'
+import fs from 'fs'
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(
-      // If you're using custom elements (like sl-*), you need to configure Vue to recognize them.
-      // {
-      //   template: {
-      //     compilerOptions: {
-      //       isCustomElement: (tag) => tag.startsWith('sl-')
-      //     }
-      //   }
-      // }
-    )
-  ],
-  esbuild: {
-    drop: ['console', 'debugger'],
-  },
-  build: {
-    minify: 'esbuild',
-    lib: {
-      entry: resolve(__dirname, 'app/main.js'),
-      name: 'KwcTemplateVue',
-      fileName: (format) => `kwc-template-vue.${format}.js`,
-      formats: ['es']
-    },
-    rollupOptions: {
-      // If you want to bundle Vue with the component (so it works standalone), leave external empty.
-      // If you expect the host application to provide Vue, add 'vue' to external.
-      // For a "template project" that might be used in React, bundling Vue is usually safer/easier.
-      external: [], 
-      output: {
-        globals: {
-          vue: 'Vue'
+const COMPONENTS_DIR = path.resolve(__dirname, 'app/kwc')
+const TEMP_ENTRY_DIR = path.resolve(__dirname, 'temp-entry')
+
+export default defineConfig(({ command }) => {
+  const isBuild = command === 'build'
+  const entryPoints = {}
+
+  if (isBuild) {
+    // 1. Clean and recreate temp directory
+    if (fs.existsSync(TEMP_ENTRY_DIR)) {
+      fs.rmSync(TEMP_ENTRY_DIR, { recursive: true, force: true })
+    }
+    fs.mkdirSync(TEMP_ENTRY_DIR, { recursive: true })
+
+    // 2. Scan components and generate entry files
+    if (fs.existsSync(COMPONENTS_DIR)) {
+      fs.readdirSync(COMPONENTS_DIR).forEach(componentName => {
+        // Assume component main file is [ComponentName].ce.vue or index.ce.vue
+        // Adjust logic based on your actual structure. 
+        // Here we check for [ComponentName].ce.vue inside the component folder
+        const componentFile = path.join(COMPONENTS_DIR, componentName, `${componentName}.ce.vue`)
+        
+        if (fs.existsSync(componentFile)) {
+          // Generate entry content
+          // Using relative path for import to ensure portability
+          const relativePath = path.relative(TEMP_ENTRY_DIR, componentFile).replace(/\\/g, '/')
+          
+          const entryContent = `
+import { defineCustomElement } from 'vue'
+import Component from '${relativePath}'
+
+// Create the custom element constructor
+const Element = defineCustomElement(Component)
+
+// Register the custom element
+function register(name = '${componentName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}') {
+  if (!customElements.get(name)) {
+    customElements.define(name, Element)
+  }
+}
+
+export default { Element, register }
+export { Element, register }
+`.trim()
+
+          const entryFile = path.join(TEMP_ENTRY_DIR, `${componentName}.js`)
+          fs.writeFileSync(entryFile, entryContent)
+          entryPoints[componentName] = entryFile
         }
+      })
+    }
+  }
+
+  // Plugin to cleanup temp dir after build
+  const cleanupTempDirPlugin = {
+    name: 'cleanup-temp-dir',
+    closeBundle() {
+      if (isBuild && fs.existsSync(TEMP_ENTRY_DIR)) {
+        fs.rmSync(TEMP_ENTRY_DIR, { recursive: true, force: true })
       }
     }
-  },
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'app')
+  }
+
+  return {
+    plugins: [
+      vue(),
+      cleanupTempDirPlugin
+    ],
+    esbuild: {
+      drop: ['console', 'debugger'],
+    },
+    build: {
+      minify: 'esbuild',
+      lib: {
+        // When building multiple entries, 'entry' should be an object
+        entry: entryPoints,
+        formats: ['es']
+      },
+      rollupOptions: {
+        external: [],
+        output: {
+          // Use [name] placeholder to preserve component names in output
+          entryFileNames: '[name]/index.js',
+          globals: {
+            vue: 'Vue'
+          }
+        }
+      }
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'app')
+      }
+    },
+    define: {
+      'process.env.NODE_ENV': '"production"'
+    },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      include: ['app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
     }
-  },
-  define: {
-    'process.env.NODE_ENV': '"production"'
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    include: ['app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
   }
 })
