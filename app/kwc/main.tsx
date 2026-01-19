@@ -1,27 +1,33 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-// import ComponentA from './componentA'
-// import ComponentB from './componentB'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+// import ExampleComponent from './exampleCom';
 
-interface EventPayload {
-  time?: number
+function mount<T extends object>(Component: React.ComponentType<T>, props: T) {
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    const root = ReactDOM.createRoot(el);
+    root.render(<Component {...props} />);
 }
 
-interface ComponentProps {
-  title?: string
-  onEvent?: (name: string, payload?: EventPayload) => void
-}
+// 模拟配置数据
+const mockConfig: KwcConfig = {
+    pageId: 'mockPageId',
+    formId: 'mockFormId',
+    controlId: 'mockControlId',
+    isvId: 'mockIsvId',
+    moduleId: 'mockModuleId',
+    metaProps: {},
+    context: {
+        data: {},
+        dispatchAction: (action, params) => console.log('dispatchAction', action, params),
+        getData: () => ({}),
+        addDataChangeListener: () => {
+            console.log('addDataChangeListener registered');
+            return () => console.log('addDataChangeListener removed');
+        },
+        close: (params) => console.log('close', params)
+    }
+};
 
-interface MountOptions {
-  title?: string
-}
+// mount(ExampleComponent, { config: mockConfig });
 
-function mount(Component: React.ComponentType<ComponentProps>, props: MountOptions = {}) {
-  const el = document.createElement('div')
-  document.body.appendChild(el)
-  const root = ReactDOM.createRoot(el)
-  root.render(<Component {...props} />)
-}
-
-// mount(ComponentA, { title: 'A' })
-// mount(ComponentB, { title: 'B' })
