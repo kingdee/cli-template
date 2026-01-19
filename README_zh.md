@@ -25,11 +25,28 @@ npm run test
 ## 构建
 
 ```bash
+# 生产环境构建
 npm run build
+
+# 开发环境构建 (保留临时文件用于调试)
+npm run build:dev
 ```
 
 构建过程会生成：
-- `dist/kwc-template-vue.es.js`: 一个紧凑、经过压缩的 ES 模块，包含自定义元素和注册逻辑。
+- `dist/kwc/[ComponentName]/index.js`: 每个组件对应的标准 Web Component 模块。
+
+## 调试
+
+```bash
+# 开启本地调试服务及构建监听
+npm run debug
+
+# 仅开启本地调试服务 (托管 ./dist 目录)
+npm run debug:server
+
+# 开启开发模式下的构建监听
+npm run debug:build
+```
 
 ## 使用方法
 
