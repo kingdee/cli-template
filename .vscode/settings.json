@@ -1,3 +1,11 @@
 {
-    "standard.enable": false     // 1. 禁用 StandardJS 插件
+    "eslint.useFlatConfig": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact"
+    ]
 }
