@@ -76,11 +76,13 @@ export default [
     },
   },
   {
-    files: ['**/*.jsx'],
+    files: ['**/*.jsx', '**/*.js'],
     languageOptions: {
       globals: {
         document: 'readonly',
         window: 'readonly',
+        console: 'readonly',
+        process: 'readonly'
       },
     },
     plugins: { react },
