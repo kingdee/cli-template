@@ -1,13 +1,13 @@
-import { describe, it, expect, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import ExampleComponent from '../ExampleComponent.ce.vue'
+import { describe, it, expect, vi } from 'vitest';
+import { mount } from '@vue/test-utils';
+import ExampleComponent from '../ExampleComponent.ce.vue';
 
 // Mock ResizeObserver for Shoelace components
 window.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+  disconnect: vi.fn()
+}));
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -20,9 +20,9 @@ Object.defineProperty(window, 'matchMedia', {
     removeListener: vi.fn(), // deprecated
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-})
+    dispatchEvent: vi.fn()
+  }))
+});
 
 describe('ExampleComponent', () => {
   it('renders properly', () => {
@@ -34,9 +34,9 @@ describe('ExampleComponent', () => {
           }
         }
       }
-    })
-    expect(wrapper.text()).toContain('Vue + Shoelace Web Component')
-  })
+    });
+    expect(wrapper.text()).toContain('Vue + Shoelace Web Component');
+  });
 
   it('increments count when button is clicked', async () => {
     const wrapper = mount(ExampleComponent, {
@@ -47,18 +47,18 @@ describe('ExampleComponent', () => {
           }
         }
       }
-    })
-    expect(wrapper.text()).toContain('Count: 0')
-    
+    });
+    expect(wrapper.text()).toContain('Count: 0');
+
     // Find the sl-button
     // Note: Since we are testing the Vue component directly (not the web component wrapper),
     // we interact with the Vue instance.
-    const button = wrapper.find('.increment-btn')
-    expect(button.exists()).toBe(true)
-    
+    const button = wrapper.find('.increment-btn');
+    expect(button.exists()).toBe(true);
+
     // Trigger click event
-    await button.trigger('click')
-    
-    expect(wrapper.text()).toContain('Count: 1')
-  })
-})
+    await button.trigger('click');
+
+    expect(wrapper.text()).toContain('Count: 1');
+  });
+});

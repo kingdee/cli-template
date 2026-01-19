@@ -7,25 +7,35 @@
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix"
+    "lint": "eslint . --fix",
+    "debug:server": "node server.js",
+    "debug:build": "vite build --watch --mode development",
+    "debug": "npm-run-all --parallel debug:server debug:build"
   },
   "dependencies": {
     "vue": "^3.4.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.6",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/test-utils": "^2.4.0",
     "eslint": "^9.39.2",
-    "eslint-plugin-vue": "^10.6.2",
+    "eslint-plugin-vue": "^10.7.0",
+    "express": "^5.2.1",
+    "globals": "^17.0.0",
     "jsdom": "^23.0.0",
+    "npm-run-all": "^4.1.5",
     "sass": "^1.97.2",
     "terser": "^5.44.1",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.53.0",
     "vite": "^5.0.0",
+    "vite-plugin-css-injected-by-js": "^3.5.2",
     "vitest": "^1.0.0",
+    "vue-eslint-parser": "^10.2.0",
     "vue-tsc": "^3.2.2"
   }
 }

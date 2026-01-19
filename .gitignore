@@ -144,3 +144,6 @@ Thumbs.db
 
 # Test files
 test-results/
+
+# Temp
+temp-entry
