@@ -25,11 +25,28 @@ npm run test
 ## Build
 
 ```bash
+# Build for production
 npm run build
+
+# Build for development (keeps temp files for debugging)
+npm run build:dev
 ```
 
 The build process produces:
-- `dist/kwc-template-vue.es.js`: A compact, minified ES module containing the custom element and registration logic.
+- `dist/kwc/[ComponentName]/index.js`: Standard Web Component modules for each component.
+
+## Debug
+
+```bash
+# Debug with local server and build watch
+npm run debug
+
+# Start debug server only (serves ./dist)
+npm run debug:server
+
+# Build with watch mode in development mode
+npm run debug:build
+```
 
 ## Usage
 

@@ -4,10 +4,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --mode production",
+    "build:dev": "vite build --mode development",
+    "build:prod": "vite build --mode production",
     "preview": "vite preview",
     "test": "vitest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "debug:server": "node server.js",
+    "debug:build": "vite build --watch --mode development",
+    "debug": "npm-run-all --parallel debug:server debug:build"
   },
   "dependencies": {
     "vue": "^3.4.0"
@@ -18,11 +23,14 @@
     "@vue/test-utils": "^2.4.0",
     "eslint": "^9.39.2",
     "eslint-plugin-vue": "^10.6.2",
+    "express": "^5.2.1",
     "globals": "^17.0.0",
     "jsdom": "^23.0.0",
+    "npm-run-all": "^4.1.5",
     "sass": "^1.97.2",
     "terser": "^5.44.1",
     "vite": "^5.0.0",
+    "vite-plugin-css-injected-by-js": "^3.5.2",
     "vitest": "^1.0.0"
   }
 }

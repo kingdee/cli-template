@@ -9,9 +9,14 @@ const handleLog = () => {
 </script>
 
 <template>
-  <div class='simple-demo'>
-    <input v-model="inputValue" type='text' placeholder='Type something...' class='demo-input' />
-    <button @click='handleLog' class='demo-btn'>
+  <div class="simple-demo">
+    <input
+      v-model="inputValue"
+      type="text"
+      placeholder="Type something..."
+      class="demo-input"
+    >
+    <button class="demo-btn" @click="handleLog">
       Log to Console
     </button>
   </div>
