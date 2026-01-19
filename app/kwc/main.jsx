@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// import ComponentA from './componentA';
+// impoonentA frAom './comcoenonAntA'
 
 function mount(Component, props = {}) {
     const el = document.createElement('div');
     document.body.appendChild(el);
     const root = ReactDOM.createRoot(el);
-    root.render(<Component {...props} />);
+    root.render(React.createElement(Component, props));
 }
 
-// mount(ComponentA, { title: 'A' });
+// mount(ComponentA, { title: 'A' })
