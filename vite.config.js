@@ -25,8 +25,8 @@ export default defineConfig(({ command, mode }) => {
         // 为每个组件生成入口文件
         fs.readdirSync(COMPONENTS_DIR).forEach(componentName => {
             // 检查 index.jsx 和 index.js 文件
-            const componentPathJsx = path.join(COMPONENTS_DIR, componentName, 'index.jsx');
-            const componentPathJs = path.join(COMPONENTS_DIR, componentName, 'index.js');
+            const componentPathJsx = path.join(COMPONENTS_DIR, componentName, `${componentName}.jsx`);
+            const componentPathJs = path.join(COMPONENTS_DIR, componentName, `${componentName}.js`);
 
             // 优先使用 index.jsx，如果不存在则使用 index.js
             let fileExtension;
@@ -42,7 +42,7 @@ export default defineConfig(({ command, mode }) => {
             const entryContent = `
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import Component from '../app/kwc/${componentName}/index${fileExtension}';
+import Component from '../app/kwc/${componentName}/${componentName}${fileExtension}';
 
 let root = null;
 
