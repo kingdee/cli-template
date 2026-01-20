@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
-
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 import chokidar from 'chokidar';
 
 // 应用配置
 const app = express();
-const PORT = process.env.PORT || 3334;
+const PORT = process.env.PORT || 3333;
 
 // 路径配置
 const CWD = process.cwd();
@@ -19,7 +18,14 @@ const DIST_KWC_DIR = path.join(CWD, 'dist', 'kwc');
  * 1️⃣ 读取 kd config
  * =============================== */
 
-let kdConfig = {};
+interface KdConfig {
+    isv?: string;
+    moduleId?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
+}
+
+let kdConfig: KdConfig = {};
 
 /**
  * 加载并解析 kd 配置文件
@@ -54,7 +60,8 @@ function loadKdConfig() {
             console.warn('[kd-config] Missing required fields (isv/moduleId)');
             kdConfig = parsedConfig;
         }
-    } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
         console.error('[kd-config] Parse error:', e.message);
         kdConfig = {};
     }
@@ -66,16 +73,17 @@ loadKdConfig();
  * 全局 Header / CORS
  * =============================== */
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
     // CORS 配置
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Credentials', true);
+    res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With');
     res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
 
     // 处理预检请求
     if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+        res.status(200).end();
+        return;
     }
 
     next();
@@ -92,7 +100,7 @@ chokidar.watch(KD_CONFIG_PATH, { ignoreInitial: true }).on('change', () => {
  * 2️⃣ 设置静态服务（动态 based on config）
  * =============================== */
 
-let staticRoutePath = null;
+let staticRoutePath: string | null = null;
 
 /**
  * 设置静态文件服务中间件
@@ -101,9 +109,11 @@ function setupStaticMiddleware() {
     // 移除旧的静态路由
     if (staticRoutePath) {
         // 更可靠的路由移除方法
-        const routes = app._router.stack;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const routes = (app._router as any).stack;
         const routeIndex = routes.findIndex(
-            layer => layer.route && layer.route.path === staticRoutePath
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (layer: any) => layer.route && layer.route.path === staticRoutePath
         );
 
         if (routeIndex !== -1) {
@@ -185,8 +195,8 @@ function setupDistWatcher() {
         watcher.on('ready', () => {
             console.log('[watch] Watching dist/kwc directory for changes...');
         });
-
-        watcher.on('error', (error) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        watcher.on('error', (error: any) => {
             console.error('[watch] Error watching dist/kwc:', error.message);
         });
 
@@ -205,6 +215,7 @@ const distWatcher = setupDistWatcher();
  * =============================== */
 
 // 启动 HTTP 服务器
+
 app.listen(PORT, () => {
     console.log('\n🚀 KD Dev Server Started');
     console.log(`📡 Listening on http://localhost:${PORT}`);
@@ -219,7 +230,8 @@ app.listen(PORT, () => {
     }
 
     console.log('\nPress Ctrl+C to stop server\n');
-}).on('error', (error) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}).on('error', (error: any) => {
     if (error.code === 'EADDRINUSE') {
         console.error(`❌ Port ${PORT} is already in use, please use another port`);
     } else {
@@ -240,4 +252,3 @@ process.on('SIGINT', () => {
 
     process.exit(0);
 });
-

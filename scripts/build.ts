@@ -1,10 +1,8 @@
-/* eslint-env node */
-/* global setTimeout, clearTimeout */
 import { build } from 'vite';
 import * as path from 'path';
 import * as fs from 'fs';
 import chokidar from 'chokidar';
-import { generateEntries } from './entry-generator.js';
+import { generateEntries } from './entry-generator';
 
 const COMPONENTS_DIR = path.resolve(process.cwd(), 'app/kwc');
 const TEMP_ENTRY_DIR = path.resolve(process.cwd(), 'temp-entry');
@@ -14,7 +12,7 @@ const isWatch = process.argv.includes('--watch');
 const buildMode = isWatch ? 'development' : 'production';
 
 // 单个组件构建函数
-async function buildComponent(componentName, entryFile) {
+async function buildComponent(componentName: string, entryFile: string) {
     const logPrefix = isWatch ? '[Rebuild] ' : '';
     console.log(`${logPrefix}Building component: ${componentName}...`);
 
@@ -23,7 +21,7 @@ async function buildComponent(componentName, entryFile) {
 
     try {
         await build({
-            configFile: path.resolve(process.cwd(), 'vite.config.js'),
+            configFile: path.resolve(process.cwd(), 'vite.config.ts'),
             mode: buildMode
         });
         if (isWatch) {
@@ -86,9 +84,9 @@ async function run() {
     });
 
     // 组件构建任务队列（简单的防抖映射）
-    const buildTasks = {};
+    const buildTasks: Record<string, NodeJS.Timeout> = {};
 
-    const handleFileChange = (filePath) => {
+    const handleFileChange = (filePath: string) => {
         // 解析组件名
         const relativePath = path.relative(COMPONENTS_DIR, filePath);
         const componentName = relativePath.split(path.sep)[0];
@@ -103,7 +101,9 @@ async function run() {
         }
 
         buildTasks[componentName] = setTimeout(() => {
-            buildComponent(componentName, entryPoints[componentName]);
+            buildComponent(componentName, entryPoints[componentName]).catch(() => {
+                // error already logged
+            });
             delete buildTasks[componentName];
         }, 300);
     };
@@ -112,6 +112,12 @@ async function run() {
         .on('add', handleFileChange)
         .on('change', handleFileChange)
         .on('unlink', handleFileChange);
+
+    // Handle process exit
+    process.on('SIGINT', () => {
+        cleanup();
+        process.exit();
+    });
 }
 
 run();
