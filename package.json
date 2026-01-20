@@ -4,12 +4,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --mode production",
-    "build:dev": "vite build --mode development",
-    "build:prod": "vite build --mode production",
+    "build": "node scripts/build.js --mode production",
+    "build:dev": "node scripts/build.js --mode development",
+    "build:prod": "node scripts/build.js --mode production",
     "preview": "vite preview",
     "test": "vitest",
-    "lint": "eslint .",
+    "lint": "eslint . --fix",
     "debug:server": "node server.js",
     "debug:build": "vite build --watch --mode development",
     "debug": "npm-run-all --parallel debug:server debug:build"

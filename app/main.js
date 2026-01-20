@@ -9,5 +9,3 @@ const ExampleElement = defineCustomElement(ExampleComponent);
 if (!customElements.get('example-component')) {
   customElements.define('example-component', ExampleElement);
 }
-
-console.log('KWC Dev Mode: ExampleComponent registered as <example-component>');

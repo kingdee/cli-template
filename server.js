@@ -122,7 +122,6 @@ function setupStaticMiddleware() {
   // 检查 dist/kwc 目录是否存在
   if (!fs.existsSync(DIST_KWC_DIR)) {
     console.warn('[static] dist/kwc directory not found, please run build first');
-    return;
   }
 
   // 创建自定义静态中间件
