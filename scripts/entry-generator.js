@@ -20,7 +20,6 @@ export function generateEntries(componentsDir, tempEntryDir) {
     });
 
     components.forEach(componentName => {
-    // 检查 index.tsx 和 index.ts 文件
         const componentPathTsx = path.join(componentsDir, componentName, `${componentName}.jsx`);
         const componentPathTs = path.join(componentsDir, componentName, `${componentName}.js`);
 
