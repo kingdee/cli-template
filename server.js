@@ -101,7 +101,7 @@ function setupStaticMiddleware() {
     // 移除旧的静态路由
     if (staticRoutePath) {
         // 更可靠的路由移除方法
-        const routes = app._router.stack;
+        const routes = app._router?.stack || [];
         const routeIndex = routes.findIndex(
             layer => layer.route && layer.route.path === staticRoutePath
         );
