@@ -17,13 +17,13 @@ const buildMode = isWatch ? 'development' : 'production';
 async function buildComponent(componentName, entryFile) {
     const logPrefix = isWatch ? '[Rebuild] ' : '';
     console.log(`${logPrefix}Building component: ${componentName}...`);
-    
+
     process.env.TARGET_COMPONENT = componentName;
     process.env.ENTRY_FILE = entryFile;
 
     try {
         await build({
-            configFile: path.resolve(process.cwd(), 'vite.config.ts'),
+            configFile: path.resolve(process.cwd(), 'vite.config.js'),
             mode: buildMode
         });
         if (isWatch) {
@@ -31,9 +31,7 @@ async function buildComponent(componentName, entryFile) {
         }
     } catch (error) {
         console.error(`[Error] Failed to build ${componentName}:`, error);
-        if (!isWatch) {
-            process.exit(1);
-        }
+        throw error;
     }
 }
 
@@ -44,21 +42,36 @@ async function run() {
     const entryPoints = generateEntries(COMPONENTS_DIR, TEMP_ENTRY_DIR);
     const components = Object.keys(entryPoints);
 
+    const cleanup = () => {
+        if (fs.existsSync(TEMP_ENTRY_DIR)) {
+            fs.rmSync(TEMP_ENTRY_DIR, { recursive: true, force: true });
+        }
+    };
+
     if (components.length === 0) {
         console.log('No components found to build.');
+        if (!isWatch) {
+            cleanup();
+        }
         return;
     }
 
     // 2. 执行全量构建（Watch 模式下作为初始构建）
     for (const componentName of components) {
-        await buildComponent(componentName, entryPoints[componentName]);
+        try {
+            await buildComponent(componentName, entryPoints[componentName]);
+        } catch (error) {
+            console.error(error);
+            if (!isWatch) {
+                cleanup();
+                process.exit(1);
+            }
+        }
     }
 
     if (!isWatch) {
         // 非 Watch 模式：构建完成后清理临时目录并退出
-        if (fs.existsSync(TEMP_ENTRY_DIR)) {
-            fs.rmSync(TEMP_ENTRY_DIR, { recursive: true, force: true });
-        }
+        cleanup();
         console.log('All components built successfully!');
         return;
     }
