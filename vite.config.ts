@@ -27,8 +27,8 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
         // 为每个组件生成入口文件
         fs.readdirSync(COMPONENTS_DIR).forEach(componentName => {
             // 检查 index.tsx 和 index.ts 文件
-            const componentPathTsx = path.join(COMPONENTS_DIR, componentName, 'index.tsx');
-            const componentPathTs = path.join(COMPONENTS_DIR, componentName, 'index.ts');
+            const componentPathTsx = path.join(COMPONENTS_DIR, componentName, `${componentName}.tsx`);
+            const componentPathTs = path.join(COMPONENTS_DIR, componentName, `${componentName}.ts`);
 
             // 优先使用 index.tsx，如果不存在则使用 index.ts
             let fileExtension;
@@ -44,7 +44,7 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
             const entryContent = `
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import Component from '../app/kwc/${componentName}/index${fileExtension}';
+import Component from '../app/kwc/${componentName}/${componentName}${fileExtension}';
 
 let root = null;
 
