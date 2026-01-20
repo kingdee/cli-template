@@ -60,7 +60,6 @@ export function unmount() {
   }
 }
 
-// 导出组件和方法，确保与 kwcInstance.js 兼容
 export default {
   Component,
   mount,
