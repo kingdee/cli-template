@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/build.js",
     "debug:server": "node server.js",
-    "debug:build": "vite build --watch --mode development",
+    "debug:build": "node scripts/build.js --watch",
     "debug": "npm-run-all --parallel debug:server debug:build",
     "test": "vitest",
     "test:watch": "vitest --watch",
