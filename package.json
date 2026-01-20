@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build",
+    "build": "vue-tsc && node scripts/build.js",
     "preview": "vite preview",
     "test": "vitest",
     "lint": "eslint . --fix",
