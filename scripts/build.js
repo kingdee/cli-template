@@ -61,6 +61,7 @@ async function run() {
         try {
             await buildComponent(componentName, entryPoints[componentName]);
         } catch (error) {
+            console.error(error);
             if (!isWatch) {
                 cleanup();
                 process.exit(1);
