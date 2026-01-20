@@ -1,5 +1,3 @@
-/* eslint-env node */
-/* global setTimeout, clearTimeout */
 import { build } from 'vite';
 import * as path from 'path';
 import * as fs from 'fs';

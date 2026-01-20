@@ -1,6 +1,6 @@
 import js from '@eslint/js';
 import react from 'eslint-plugin-react';
-import babelParser from '@babel/eslint-parser';
+import globals from 'globals';
 
 export default [
     {
@@ -12,28 +12,20 @@ export default [
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',
-            parser: babelParser,
             parserOptions: {
                 ecmaFeatures: {
-                    jsx: true,
-                    modules: true
-                },
-                requireConfigFile: false,
-                babelOptions: {
-                    presets: [
-                        ['@babel/preset-react', {
-                            runtime: 'automatic'
-                        }]
-                    ]
+                    jsx: true
                 }
             },
             globals: {
-                document: 'readonly',
-                window: 'readonly',
-                __dirname: 'readonly',
-                process: 'readonly',
-                alert: 'readonly',
-                console: 'readonly'
+                ...globals.browser,
+                ...globals.node,
+                __dirname: 'readonly'
+            }
+        },
+        settings: {
+            react: {
+                version: 'detect'
             }
         },
         plugins: { react },
@@ -79,15 +71,19 @@ export default [
             'prefer-template': 1, // 建议使用模板字符串
             'no-duplicate-imports': 2, // 禁止重复导入
             'no-unused-vars': 1, // 出现未使用的变量
-            'radix': 1 // 解析整数时必须使用基数
+            'radix': 1, // 解析整数时必须使用基数
+
+            // React specific rules
+            'react/jsx-uses-react': 'off', // React 17+ doesn't need this
+            'react/react-in-jsx-scope': 'off', // React 17+ doesn't need this
+            'react/jsx-uses-vars': 'error'
         }
     },
     {
         files: ['**/__tests__/**/*.{js,jsx}'],
         languageOptions: {
             globals: {
-                test: 'readonly',
-                expect: 'readonly',
+                ...globals.jest,
                 vi: 'readonly'
             }
         }
@@ -96,11 +92,8 @@ export default [
         files: ['app/kwc/**/*.jsx'],
         languageOptions: {
             globals: {
-                alert: 'readonly'
+                // app/kwc specific globals if any
             }
-        },
-        rules: {
-            'no-restricted-globals': ['error', 'window']
         }
     }
 ];
