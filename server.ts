@@ -110,7 +110,7 @@ function setupStaticMiddleware() {
     if (staticRoutePath) {
         // 更可靠的路由移除方法
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const routes = (app._router as any).stack;
+        const routes = (app._router as any)?.stack || [];
         const routeIndex = routes.findIndex(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (layer: any) => layer.route && layer.route.path === staticRoutePath
