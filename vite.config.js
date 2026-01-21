@@ -22,7 +22,8 @@ export default defineConfig(({ command, mode }) => {
 
     server: {
       port: 3000,
-      open: true
+      open: true,
+      host: true
     },
 
     plugins: [
@@ -70,7 +71,7 @@ export default defineConfig(({ command, mode }) => {
       codeSplit: false
     },
 
-    logLevel: isBuild ? 'info' : 'warn',
+    logLevel: 'info',
 
     test: {
       globals: true,

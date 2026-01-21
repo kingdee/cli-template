@@ -1,5 +1,5 @@
 import { defineCustomElement } from 'vue';
-import ExampleComponent from './kwc/ExampleComponent/ExampleComponent.ce.vue';
+import ExampleComponent from './ExampleComponent/ExampleComponent.ce.vue';
 
 // Define custom element
 const ExampleElement = defineCustomElement(ExampleComponent);
