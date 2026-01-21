@@ -57,7 +57,9 @@ export default defineConfig(({ command, mode }) => {
 
         // 公共配置
         server: {
-            port: 3000
+            port: 3000,
+            open: true,
+            host: true
         },
         plugins: [
             react(),
@@ -82,6 +84,6 @@ export default defineConfig(({ command, mode }) => {
             extract: false,
             inject: true
         },
-        logLevel: isBuild ? 'info' : 'warn'
+        logLevel: 'info'
     };
 });
