@@ -1,8 +1,7 @@
 /// <reference types="vitest" />
-import { defineConfig, ConfigEnv, ESBuildOptions } from 'vite';
+import { defineConfig, ESBuildOptions } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
-import fs from 'fs';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 
 export default defineConfig(({ command, mode }) => {

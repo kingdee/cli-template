@@ -21,7 +21,9 @@ fs.mkdirSync(tempEntryDir, { recursive: true });
 // Get all component directories that contain a .ce.vue file
 const components = fs.readdirSync(componentsDir).filter(name => {
   const dirPath = path.join(componentsDir, name);
-  if (!fs.statSync(dirPath).isDirectory()) return false;
+  if (!fs.statSync(dirPath).isDirectory()) {
+    return false;
+  }
   return fs.existsSync(path.join(dirPath, `${name}.ce.vue`));
 });
 
@@ -30,14 +32,14 @@ console.log(`Found ${components.length} components: ${components.join(', ')}`);
 // Build each component individually
 for (const component of components) {
   console.log(`\nBuilding component: ${component}...`);
-  
+
   // Set env var to tell vite.config.ts to only process this component
   process.env.TARGET_COMPONENT = component;
-  
+
   // Generate temp entry file
   const componentFile = path.join(componentsDir, component, `${component}.ce.vue`);
   const relativePath = path.relative(tempEntryDir, componentFile).replace(/\\/g, '/');
-  
+
   const entryContent = `
 import { defineCustomElement } from 'vue'
 import Component from '${relativePath}'
