@@ -5,20 +5,18 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/build.js --mode production",
-    "build:dev": "node scripts/build.js --mode development",
-    "build:prod": "node scripts/build.js --mode production",
+    "debug": "node server.js & node scripts/build.js --watch",
     "preview": "vite preview",
     "test": "vitest",
-    "lint": "eslint . --fix",
-    "debug:server": "node server.js",
-    "debug:build": "vite build --watch --mode development",
-    "debug": "npm-run-all --parallel debug:server debug:build"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "vue": "^3.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@kdcloudjs/shoelace": "^0.0.2",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/test-utils": "^2.4.0",
     "eslint": "^9.39.2",
@@ -26,7 +24,6 @@
     "express": "^5.2.1",
     "globals": "^17.0.0",
     "jsdom": "^23.0.0",
-    "npm-run-all": "^4.1.5",
     "sass": "^1.97.2",
     "terser": "^5.44.1",
     "vite": "^5.0.0",

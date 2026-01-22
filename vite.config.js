@@ -27,7 +27,13 @@ export default defineConfig(({ command, mode }) => {
     },
 
     plugins: [
-      vue(),
+      vue({
+        template: {
+          compilerOptions: {
+            isCustomElement: (tag) => tag.startsWith('sl-')
+          }
+        }
+      }),
       cssInjectedByJsPlugin()
     ].filter(Boolean),
 
