@@ -1,5 +1,13 @@
 import { defineCustomElement } from 'vue';
+import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js';
 import ExampleComponent from './ExampleComponent/ExampleComponent.ce.vue';
+
+const isDev = import.meta.env.DEV;
+const basePath = isDev
+  ? '/node_modules/@kdcloudjs/shoelace/dist'
+  : new URL('../../shoelace', import.meta.url).href;
+
+setBasePath(basePath);
 
 // Define custom element
 const ExampleElement = defineCustomElement(ExampleComponent);
