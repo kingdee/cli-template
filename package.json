@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsx scripts/build.ts",
-    "debug": "tsx server.ts & tsx scripts/build.ts --watch",
+    "server": "tsx server.ts",
+    "debug": "tsx scripts/build.ts --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "lint": "eslint .",
