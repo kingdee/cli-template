@@ -1,6 +1,7 @@
 import { defineConfig, ConfigEnv, ESBuildOptions, BuildOptions } from 'vite';
 import react from '@vitejs/plugin-react';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
+import path from 'path';
 
 // ========================== 插件定义 ==========================
 
@@ -45,7 +46,8 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
 
     return {
         define: {
-            'process.env.NODE_ENV': isProdBuild ? JSON.stringify('production') : JSON.stringify('development')
+            'process.env.NODE_ENV': isProdBuild ? JSON.stringify('production') : JSON.stringify('development'),
+            'import.meta.env.SHOELACE_BASE_URL': JSON.stringify(`/@fs${path.resolve(__dirname, 'node_modules/@kdcloudjs/shoelace/dist')}`)
         },
 
         esbuild: {

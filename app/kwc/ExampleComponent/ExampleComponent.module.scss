@@ -1,0 +1,188 @@
+.container {
+  max-width: 100vw;
+  margin: 0 auto;
+  /* padding: 2rem; */
+  text-align: center;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  color: #213547;
+  background-color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-circle {
+  position: absolute;
+  /* Proportional scaling based on 1920x1000 design draft */
+  width: 36.56vw;
+  /* (702 / 1920) * 100 */
+  height: 67.6vh;
+  /* (676 / 1000) * 100 */
+  left: 12.86vw;
+  /* (247 / 1920) * 100 */
+  top: 56.7vh;
+  /* (567 / 1000) * 100 */
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(104, 255, 225, 0.22) 0%, rgba(134, 221, 255, 0.44) 100%);
+  opacity: 0.61;
+  filter: blur(7.8vw);
+  /* (150 / 1920) * 100 */
+  z-index: 0;
+  pointer-events: none;
+  transform: translate(-20%, -20%);
+}
+
+.bg-circle-2 {
+  position: absolute;
+  /* Proportional scaling based on 1920x1000 design draft */
+  width: 43.33vw;
+  /* (832 / 1920) * 100 */
+  height: 80.2vh;
+  /* (802 / 1000) * 100 */
+  left: 48.33vw;
+  /* (928 / 1920) * 100 */
+  top: 12.6vh;
+  /* (126 / 1000) * 100 */
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(195, 104, 255, 0.22) 0%, rgba(134, 181, 255, 0.44) 100%);
+  opacity: 0.62;
+  filter: blur(6.25vw);
+  /* (120 / 1920) * 100 - Scaled blur (400px -> ~120px CSS blur) */
+  z-index: 0;
+  pointer-events: none;
+  transform: translate(-20%, -20%);
+}
+
+.bg-circle-3 {
+  position: absolute;
+  /* Proportional scaling based on 1920x1000 design draft */
+  width: 43.33vw;
+  /* (832 / 1920) * 100 */
+  height: 80.2vh;
+  /* (802 / 1000) * 100 */
+  left: -19.69vw;
+  /* (-378 / 1920) * 100 */
+  top: 21.1vh;
+  /* (211 / 1000) * 100 */
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(104, 197, 255, 0.34) 0%, rgba(163, 134, 255, 0.44) 100%);
+  opacity: 0.19;
+  filter: blur(6.25vw);
+  /* (120 / 1920) * 100 - Scaled blur (400px -> ~120px CSS blur) */
+  z-index: 0;
+  pointer-events: none;
+  transform: translate(-20%, -20%);
+}
+
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.logo {
+  height: 12em;
+  padding: 1.5em;
+  will-change: filter, transform;
+  transition: filter 300ms;
+  position: relative;
+  z-index: 1;
+}
+
+.bounce {
+  animation: bounce 2s infinite ease-in-out;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+  cursor: pointer;
+}
+
+/* Removed .logo.vue selector as it's no longer used */
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  background: -webkit-linear-gradient(315deg, #42d392 25%, #647eff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+/* button styles removed as sl-button is used */
+
+.custom-button::part(base) {
+  background: linear-gradient(95deg, #742FF7 -49.79%, #276FF5 101.75%);
+  border: none;
+  padding-left: 40px;
+  padding-right: 47px;
+  color: white;
+}
+
+.custom-button::part(label) {
+  padding: 0;
+  /* Reset internal label padding if needed */
+}
+
+/* Ensure text color is white */
+.custom-button {
+  --sl-color-neutral-0: #ffffff;
+  color: white;
+}
+
+.custom-button::part(base):hover {
+  /* Add a slight brightness or opacity change for hover state if desired */
+  opacity: 0.9;
+}
+
+.count-text {
+  margin-left: 4px;
+}
+
+.card {
+  padding: 2em;
+  position: relative;
+  z-index: 1;
+}
+
+.read-the-docs {
+  color: #888;
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f6f6f6;
+    background-color: #242424;
+  }
+
+  .container {
+    color: #f6f6f6;
+    background-color: #242424;
+  }
+
+  a:hover {
+    color: #747bff;
+  }
+
+  button {
+    background-color: #f9f9f9;
+    color: #213547;
+  }
+}
