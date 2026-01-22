@@ -1,10 +1,17 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 import chokidar from 'chokidar';
+
+// Interface for KD Config
+interface KdConfig {
+  isv?: string;
+  moduleId?: string;
+  [key: string]: any;
+}
 
 // 应用配置
 const app = express();
@@ -19,7 +26,7 @@ const DIST_KWC_DIR = path.join(CWD, 'dist', 'kwc');
  * 1️⃣ 读取 kd config
  * =============================== */
 
-let kdConfig = {};
+let kdConfig: KdConfig = {};
 
 /**
  * 加载并解析 kd 配置文件
@@ -54,7 +61,7 @@ function loadKdConfig() {
       console.warn('[kd-config] Missing required fields (isv/moduleId)');
       kdConfig = parsedConfig;
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error('[kd-config] Parse error:', e.message);
     kdConfig = {};
   }
@@ -66,16 +73,17 @@ loadKdConfig();
  * 全局 Header / CORS
  * =============================== */
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   // CORS 配置
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Credentials', true);
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With');
   res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
 
   // 处理预检请求
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
 
   next();
@@ -92,7 +100,7 @@ chokidar.watch(KD_CONFIG_PATH, { ignoreInitial: true }).on('change', () => {
  * 2️⃣ 设置静态服务（动态 based on config）
  * =============================== */
 
-let staticRoutePath = null;
+let staticRoutePath: string | null = null;
 
 /**
  * 设置静态文件服务中间件
@@ -103,7 +111,7 @@ function setupStaticMiddleware() {
     // 更可靠的路由移除方法
     const routes = app._router.stack;
     const routeIndex = routes.findIndex(
-      layer => layer.route && layer.route.path === staticRoutePath
+      (layer: any) => layer.route && layer.route.path === staticRoutePath
     );
 
     if (routeIndex !== -1) {
@@ -129,7 +137,7 @@ function setupStaticMiddleware() {
 
   // 创建中间件实例
   const staticMiddleware = express.static(DIST_KWC_DIR, {
-    setHeaders(res, filePath) {
+    setHeaders(res: Response, filePath: string) {
       const ext = path.extname(filePath).toLowerCase();
 
       // 设置正确的 Content-Type
@@ -219,7 +227,7 @@ app.listen(PORT, () => {
   }
 
   console.log('\nPress Ctrl+C to stop server\n');
-}).on('error', (error) => {
+}).on('error', (error: any) => {
   if (error.code === 'EADDRINUSE') {
     console.error(`❌ Port ${PORT} is already in use, please use another port`);
   } else {
@@ -240,4 +248,3 @@ process.on('SIGINT', () => {
 
   process.exit(0);
 });
-

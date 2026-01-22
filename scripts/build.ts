@@ -19,11 +19,12 @@ if (fs.existsSync(tempEntryDir)) {
 fs.mkdirSync(tempEntryDir, { recursive: true });
 
 // Get all component directories that contain a .ce.vue file
-const components = fs.readdirSync(componentsDir).filter(name => {
+const components: string[] = fs.readdirSync(componentsDir).filter((name: string) => {
   const dirPath = path.join(componentsDir, name);
   if (!fs.statSync(dirPath).isDirectory()) {
     return false;
   }
+  // Check if .ce.vue file exists
   return fs.existsSync(path.join(dirPath, `${name}.ce.vue`));
 });
 
