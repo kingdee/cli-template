@@ -1,6 +1,6 @@
 import '@kdcloudjs/kwc-synthetic-shadow';
 import { createElement } from '@kdcloudjs/kwc';
-// import testComponent from './testComponent/testComponent.js';
+import exampleComponent from './exampleComponent/exampleComponent.js';
 
-// const element = createElement('test-component', { is: testComponent });
-// document.body.appendChild(element);
+const element = createElement('kwc-example-component', { is: exampleComponent });
+document.body.appendChild(element);
