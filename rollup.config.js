@@ -132,7 +132,8 @@ export default (args) => {
             // 复制静态资源
             isDev && copy({
                 targets: [
-                    { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' }
+                    { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
+                    { src: 'app/kwc/logo.png', dest: 'dist' }
                 ]
             }),
             isDev && {

@@ -1,0 +1,61 @@
+<template>
+  <div class="container">
+    <div class="bg-circle"></div>
+    <div class="bg-circle-2"></div>
+    <div class="bg-circle-3"></div>
+    <div class="logos">
+      <a href="http://dev.test.kingdee.com/kwc" target="_blank" class="logo-link">
+        <img src={logoUrl} class="logo bounce" alt="KWC logo" />
+      </a>
+    </div>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="166" height="49" viewBox="0 0 166 49" fill="none">
+      <path
+        d="M0 47.6961V0.803865H10.3443V21.3025L29.4209 0.803865H41.9148L22.771 20.6996L42.788 47.6961H30.3613L15.7852 27.7334L10.3443 33.3605V47.6961H0Z"
+        fill="url(#paint0_linear_236_1317)" />
+      <path
+        d="M61.9474 48.0311L45.8935 0.803865H56.9767L66.7165 32.5566L77.2624 0.669889H86.129L96.6748 32.5566L106.415 0.803865H117.229L101.175 48.0311H92.1744L81.5613 17.3501L70.9483 48.0311H61.9474Z"
+        fill="url(#paint1_linear_236_1317)" />
+      <path
+        d="M146.722 48.5C132.885 48.5 122.607 37.8488 122.607 24.384V24.25C122.607 10.9192 132.683 0 147.125 0C155.992 0 161.298 2.94751 165.664 7.23481L159.081 14.8046C155.454 11.5221 151.76 9.51243 147.058 9.51243C139.132 9.51243 133.422 16.0773 133.422 24.116V24.25C133.422 32.2887 138.997 38.9876 147.058 38.9876C152.431 38.9876 155.723 36.8439 159.417 33.4945L166 40.1264C161.164 45.2845 155.79 48.5 146.722 48.5Z"
+        fill="url(#paint2_linear_236_1317)" />
+      <defs>
+        <linearGradient id="paint0_linear_236_1317" x1="2.54763e-07" y1="-5.25" x2="185.057" y2="57.8314"
+          gradientUnits="userSpaceOnUse">
+          <stop stop-color="#915EFF" />
+          <stop offset="1" stop-color="#1975FF" />
+        </linearGradient>
+        <linearGradient id="paint1_linear_236_1317" x1="2.54763e-07" y1="-5.25" x2="185.057" y2="57.8314"
+          gradientUnits="userSpaceOnUse">
+          <stop stop-color="#915EFF" />
+          <stop offset="1" stop-color="#1975FF" />
+        </linearGradient>
+        <linearGradient id="paint2_linear_236_1317" x1="2.54763e-07" y1="-5.25" x2="185.057" y2="57.8314"
+          gradientUnits="userSpaceOnUse">
+          <stop stop-color="#915EFF" />
+          <stop offset="1" stop-color="#1975FF" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="card">
+      <button class="custom-button" onclick={handleClick}>
+        <svg class="icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="margin-right: 8px;">
+          <path
+            d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z" />
+        </svg>
+        <span class="count-text">count is {count}</span>
+      </button>
+      <p>
+        Edit <code>app/kwc/ExampleComponent/exampleComponent.js</code> to get started
+      </p>
+      <p style="color: #888">
+        Build stunning web components with KWC
+      </p>
+    </div>
+
+    <p class="read-the-docs">
+      Click on the KWC logo to learn more
+    </p>
+  </div>
+</template>
