@@ -92,20 +92,14 @@ const count = ref(0);
 
 .bg-circle {
   position: absolute;
-  /* Proportional scaling based on 1920x1000 design draft */
   width: 36.56vw;
-  /* (702 / 1920) * 100 */
   height: 67.6vh;
-  /* (676 / 1000) * 100 */
   left: 12.86vw;
-  /* (247 / 1920) * 100 */
   top: 56.7vh;
-  /* (567 / 1000) * 100 */
   border-radius: 50%;
   background: linear-gradient(180deg, rgba(104, 255, 225, 0.22) 0%, rgba(134, 221, 255, 0.44) 100%);
   opacity: 0.61;
   filter: blur(7.8vw);
-  /* (150 / 1920) * 100 */
   z-index: 0;
   pointer-events: none;
   transform: translate(-20%, -20%);
@@ -113,20 +107,14 @@ const count = ref(0);
 
 .bg-circle-2 {
   position: absolute;
-  /* Proportional scaling based on 1920x1000 design draft */
   width: 43.33vw;
-  /* (832 / 1920) * 100 */
   height: 80.2vh;
-  /* (802 / 1000) * 100 */
   left: 48.33vw;
-  /* (928 / 1920) * 100 */
   top: 12.6vh;
-  /* (126 / 1000) * 100 */
   border-radius: 50%;
   background: linear-gradient(180deg, rgba(195, 104, 255, 0.22) 0%, rgba(134, 181, 255, 0.44) 100%);
   opacity: 0.62;
   filter: blur(6.25vw);
-  /* (120 / 1920) * 100 - Scaled blur (400px -> ~120px CSS blur) */
   z-index: 0;
   pointer-events: none;
   transform: translate(-20%, -20%);
@@ -134,20 +122,14 @@ const count = ref(0);
 
 .bg-circle-3 {
   position: absolute;
-  /* Proportional scaling based on 1920x1000 design draft */
   width: 43.33vw;
-  /* (832 / 1920) * 100 */
   height: 80.2vh;
-  /* (802 / 1000) * 100 */
   left: -19.69vw;
-  /* (-378 / 1920) * 100 */
   top: 21.1vh;
-  /* (211 / 1000) * 100 */
   border-radius: 50%;
   background: linear-gradient(180deg, rgba(104, 197, 255, 0.34) 0%, rgba(163, 134, 255, 0.44) 100%);
   opacity: 0.19;
   filter: blur(6.25vw);
-  /* (120 / 1920) * 100 - Scaled blur (400px -> ~120px CSS blur) */
   z-index: 0;
   pointer-events: none;
   transform: translate(-20%, -20%);
@@ -183,8 +165,6 @@ const count = ref(0);
   cursor: pointer;
 }
 
-/* Removed .logo.vue selector as it's no longer used */
-
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
@@ -208,17 +188,14 @@ h1 {
 
 .custom-button::part(label) {
   padding: 0;
-  /* Reset internal label padding if needed */
 }
 
-/* Ensure text color is white */
 .custom-button {
   --sl-color-neutral-0: #ffffff;
   color: white;
 }
 
 .custom-button::part(base):hover {
-  /* Add a slight brightness or opacity change for hover state if desired */
   opacity: 0.9;
 }
 
