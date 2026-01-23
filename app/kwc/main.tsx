@@ -1,6 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// import ExampleComponent from './exampleCom';
+import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js';
+import ExampleComponent from './ExampleComponent/ExampleComponent';
+
+const isDev = import.meta.env.DEV;
+const basePath = isDev
+    ? import.meta.env.SHOELACE_BASE_URL
+    : new URL('../../shoelace', import.meta.url).href;
+
+setBasePath(basePath);
 
 function mount<T extends object>(Component: React.ComponentType<T>, props: T) {
     const el = document.createElement('div');
@@ -29,5 +37,5 @@ const mockConfig: KwcConfig = {
     }
 };
 
-// mount(ExampleComponent, { config: mockConfig });
+mount(ExampleComponent, { config: mockConfig });
 

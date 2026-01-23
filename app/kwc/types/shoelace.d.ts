@@ -11,6 +11,8 @@ declare module 'react' {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             'sl-button': any;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            'sl-icon': any;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             'sl-table': any;
         }
     }
