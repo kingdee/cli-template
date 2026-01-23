@@ -47,7 +47,7 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
     return {
         define: {
             'process.env.NODE_ENV': isProdBuild ? JSON.stringify('production') : JSON.stringify('development'),
-            'import.meta.env.SHOELACE_BASE_URL': JSON.stringify(`/@fs${path.resolve(__dirname, 'node_modules/@kdcloudjs/shoelace/dist')}`)
+            'import.meta.env.SHOELACE_BASE_URL': JSON.stringify(`/@fs/${path.resolve(__dirname, 'node_modules/@kdcloudjs/shoelace/dist').replace(/\\/g, '/').replace(/^\//, '')}`)
         },
 
         esbuild: {
