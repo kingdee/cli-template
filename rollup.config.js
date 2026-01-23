@@ -13,6 +13,8 @@ import copy from 'rollup-plugin-copy';
 const isDebugBuild = process.env.DEBUG_BUILD === 'true';
 const isProdBuild = process.env.NODE_ENV === 'production' && !isDebugBuild;
 
+import { rimrafSync } from 'rimraf';
+
 /**
  * 清理 dist（仅 build 阶段）
  */
@@ -20,10 +22,14 @@ function cleanDist({ dir = 'dist', enabled = true } = {}) {
     return {
         name: 'clean-dist',
         buildStart() {
-            if (!enabled) {return;}
+            if (!enabled) { return; }
             if (existsSync(dir)) {
-                rmSync(dir, { recursive: true, force: true });
-                console.log(`[rollup] cleaned ${dir}`);
+                try {
+                    rimrafSync(dir);
+                    console.log(`[rollup] cleaned ${dir}`);
+                } catch (e) {
+                    console.warn(`[rollup] warning: failed to clean ${dir}`, e.message);
+                }
             }
         }
     };
@@ -123,11 +129,11 @@ export default (args) => {
                 include: ['node_modules/@kdcloudjs/kwc-shared-utils/**', 'node_modules/@kdcloudjs/kwc-i18n/**']
             }),
             isDev
-   && serve({
-       open: false,
-       port: 8000,
-       contentBase: ['dist']
-   }),
+            && serve({
+                open: false,
+                port: 8000,
+                contentBase: ['dist']
+            }),
             isDev && livereload('dist'),
             // 复制静态资源
             isDev && copy({
@@ -143,7 +149,7 @@ export default (args) => {
                     const htmlFile = path.join(outDir, 'index.html');
 
                     // 如果 dist/index.html 已存在就跳过
-                    if (existsSync(htmlFile)) {return;}
+                    if (existsSync(htmlFile)) { return; }
 
                     // 确保目录存在
                     mkdirSync(outDir, { recursive: true });
@@ -162,7 +168,8 @@ export default (args) => {
 </html>`;
                     writeFileSync(htmlFile, html);
                     console.log('[ensure-index-html] 已生成 dist/index.html');
-                }},
+                }
+            },
             isProdBuild && terser({
                 compress: {
                     drop_console: true,
@@ -177,7 +184,7 @@ export default (args) => {
         // 警告处理
         onwarn(warning, warn) {
             // 忽略某些警告
-            if (warning.code === 'THIS_IS_UNDEFINED') {return;}
+            if (warning.code === 'THIS_IS_UNDEFINED') { return; }
             warn(warning);
         }
     };

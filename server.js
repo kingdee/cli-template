@@ -7,7 +7,7 @@ import chokidar from 'chokidar';
 
 // 应用配置
 const app = express();
-const PORT = process.env.PORT || 3334;
+const PORT = process.env.PORT || 3333;
 
 // 路径配置
 const CWD = process.cwd();
