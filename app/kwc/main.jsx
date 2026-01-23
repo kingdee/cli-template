@@ -1,6 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// impoonentA frAom './comcoenonAntA'
+import ExampleComponent from './ExampleComponent/ExampleComponent.jsx';
+import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js';
+
+const isDev = import.meta.env.DEV;
+const basePath = isDev
+    ? import.meta.env.SHOELACE_BASE_URL
+    : new URL('../../shoelace', import.meta.url).href;
+
+setBasePath(basePath);
 
 function mount(Component, props = {}) {
     const el = document.createElement('div');
@@ -9,4 +17,4 @@ function mount(Component, props = {}) {
     root.render(React.createElement(Component, props));
 }
 
-// mount(ComponentA, { title: 'A' })
+mount(ExampleComponent)
