@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/build.js --mode production",
-    "debug": "node server.js & node scripts/build.js --watch",
+    "server": "node server.js",
+    "debug": "node scripts/build.js --watch",
     "preview": "vite preview",
     "test": "vitest",
     "lint": "eslint .",
