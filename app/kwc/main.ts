@@ -2,12 +2,7 @@ import { defineCustomElement } from 'vue';
 import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js';
 import ExampleComponent from './ExampleComponent/ExampleComponent.ce.vue';
 
-const isDev = import.meta.env.DEV;
-const basePath = isDev
-  ? '/node_modules/@kdcloudjs/shoelace/dist'
-  : new URL('../../shoelace', import.meta.url).href;
-
-setBasePath(basePath);
+setBasePath('/node_modules/@kdcloudjs/shoelace/dist');
 
 // Define custom element
 const ExampleElement = defineCustomElement(ExampleComponent);
@@ -17,5 +12,3 @@ const ExampleElement = defineCustomElement(ExampleComponent);
 if (!customElements.get('example-component')) {
   customElements.define('example-component', ExampleElement);
 }
-
-console.log('KWC Dev Mode: ExampleComponent registered as <example-component>');
