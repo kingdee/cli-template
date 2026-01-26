@@ -50,9 +50,12 @@ for (const component of components) {
       console.warn(`Warning: Icon ${iconName} not found in Shoelace assets.`);
     }
   }
-  const iconRegistrationCode = Object.keys(iconMap).length > 0 ? `
-import { registerIconLibrary } from '@kdcloudjs/shoelace/dist/utilities/icon-library.js';
 
+  const haveIcons = Object.keys(iconMap).length > 0;
+  const iconRegistrationImport = haveIcons ? `
+import { registerIconLibrary } from '@kdcloudjs/shoelace/dist/utilities/icon-library.js';
+` : '';
+  const iconRegistrationCode = haveIcons ? `
 const icons = ${JSON.stringify(iconMap)};
 
 registerIconLibrary('default', {
@@ -67,9 +70,12 @@ registerIconLibrary('default', {
 ` : '';
 
   const entryContent = `
-${iconRegistrationCode}
 import { defineCustomElement } from 'vue'
+${iconRegistrationImport}
 import Component from '${relativePath}'
+
+${iconRegistrationCode}
+
 const Element = defineCustomElement(Component)
 function register(name = '${component.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}') {
   if (!customElements.get(name)) {
