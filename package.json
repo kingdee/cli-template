@@ -36,6 +36,6 @@
   },
   "dependencies": {
     "@kdcloudjs/kwc-shared-utils": "^0.0.5",
-    "@kdcloudjs/shoelace": "^0.0.2"
+    "@kdcloudjs/shoelace": "^1.0.0"
   }
 }
