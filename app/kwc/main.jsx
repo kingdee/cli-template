@@ -3,12 +3,7 @@ import ReactDOM from 'react-dom/client';
 import ExampleComponent from './ExampleComponent/ExampleComponent.jsx';
 import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js';
 
-const isDev = import.meta.env.DEV;
-const basePath = isDev
-    ? import.meta.env.SHOELACE_BASE_URL
-    : new URL('../../shoelace', import.meta.url).href;
-
-setBasePath(basePath);
+setBasePath(import.meta.env.SHOELACE_BASE_URL);
 
 function mount(Component, props = {}) {
     const el = document.createElement('div');
