@@ -5,10 +5,47 @@ import commonjs from '@rollup/plugin-commonjs';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import terser from '@rollup/plugin-terser';
-import { readdirSync, existsSync, rmSync, mkdirSync, writeFileSync } from 'fs';
+import { readdirSync, existsSync, rmSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import path, { join } from 'path';
 import alias from '@rollup/plugin-alias';
 import copy from 'rollup-plugin-copy';
+
+function inlineShoelaceIcons() {
+    return {
+        name: 'inline-shoelace-icons',
+        transform(code, id) {
+            if (!id.endsWith('.html')) return null;
+
+            const iconRegex = /<sl-icon([\s\S]*?)name=["']([^"']+)["']([\s\S]*?)>/g;
+
+            const newCode = code.replace(iconRegex, (match, before, iconName, after) => {
+                const iconPath = path.resolve(process.cwd(), 'node_modules/@kdcloudjs/shoelace/dist/assets/icons', `${iconName}.svg`);
+
+                if (existsSync(iconPath)) {
+                    try {
+                        const svgContent = readFileSync(iconPath, 'utf-8');
+                        const dataUri = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
+
+                        console.log(`[inline-shoelace-icons] Inlined icon: ${iconName}`);
+
+                        return `<sl-icon${before}src="${dataUri}"${after}>`;
+                    } catch (e) {
+                        console.warn(`[inline-shoelace-icons] Failed to read icon: ${iconName}`, e);
+                        return match;
+                    }
+                } else {
+                    console.warn(`[inline-shoelace-icons] Icon not found: ${iconName}`);
+                    return match;
+                }
+            });
+
+            return {
+                code: newCode,
+                map: null
+            };
+        }
+    };
+}
 
 const isDebugBuild = process.env.DEBUG_BUILD === 'true';
 const isProdBuild = process.env.NODE_ENV === 'production' && !isDebugBuild;
@@ -119,17 +156,19 @@ export default (args) => {
             }),
             replace({
                 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+                'import.meta.env.SHOELACE_BASE_URL': isDev ? JSON.stringify('/kwc/assets/shoelace/') : "new URL('../assets/shoelace/', import.meta.url).href",
                 preventAssignment: true
             }),
             // 确保在 kwc() 之前加上 watchCss
             (isDev || isDebugBuild) && watchCss(),
+            // 仅在 Build 模式下启用内联图标插件，且必须在 kwc() 之前
+            !isDev && inlineShoelaceIcons(),
             kwc({ rootDir: 'app/kwc' }),
             resolve(),
             commonjs({
                 include: ['node_modules/@kdcloudjs/kwc-shared-utils/**', 'node_modules/@kdcloudjs/kwc-i18n/**']
             }),
-            isDev
-            && serve({
+            isDev && serve({
                 open: false,
                 port: 8000,
                 contentBase: ['dist']
@@ -139,8 +178,10 @@ export default (args) => {
             isDev && copy({
                 targets: [
                     { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
-                    { src: 'app/kwc/logo.png', dest: 'dist' }
-                ]
+                    { src: 'app/kwc/logo.png', dest: 'dist' },
+                    // Build 模式下已内联，无需复制 Shoelace 资源
+                    { src: 'node_modules/@kdcloudjs/shoelace/dist/assets', dest: 'dist/kwc/assets/shoelace' }
+                ].filter(Boolean)
             }),
             isDev && {
                 name: 'ensure-index-html',
