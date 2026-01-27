@@ -5,10 +5,11 @@ import commonjs from '@rollup/plugin-commonjs';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import terser from '@rollup/plugin-terser';
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'fs';
 import path, { join } from 'path';
 import alias from '@rollup/plugin-alias';
 import copy from 'rollup-plugin-copy';
+import { rimrafSync } from 'rimraf';
 
 function inlineShoelaceIcons() {
     return {
@@ -50,8 +51,6 @@ function inlineShoelaceIcons() {
 const isDebugBuild = process.env.DEBUG_BUILD === 'true';
 const isProdBuild = process.env.NODE_ENV === 'production' && !isDebugBuild;
 
-import { rimrafSync } from 'rimraf';
-
 /**
  * 清理 dist（仅 build 阶段）
  */
@@ -85,8 +84,28 @@ const getComponentEntries = () => {
         if (existsSync(filePath)) {
             return { [`kwc/${folder}`]: filePath };
         }
+        return {};
     }
-    return {};
+
+    // Build ALL components if no target specified
+    const componentFolders = readdirSync(componentsDir, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name);
+
+    const entries = {};
+    componentFolders.forEach(folder => {
+        const filePath = join(componentsDir, folder, `${folder}.js`);
+        if (existsSync(filePath)) {
+            entries[`kwc/${folder}`] = filePath;
+        }
+    });
+
+    // If no components, check for main.js
+    if (Object.keys(entries).length === 0 && existsSync(join(componentsDir, 'main.js'))) {
+        return { main: join(componentsDir, 'main.js') };
+    }
+
+    return entries;
 };
 
 // 🔑 新增 watchCss 插件：保证 .css 文件修改时 rollup 会重新编译
@@ -121,6 +140,83 @@ function kdBaseComponentResolver() {
     };
 }
 
+/**
+ * 替换组件标签名为带 Hash 的版本
+ */
+function replaceTagNames() {
+    const mappingEnv = process.env.KWC_TAG_MAPPING;
+    if (!mappingEnv) {
+        return null;
+    }
+
+    const mapping = JSON.parse(mappingEnv);
+    const keys = Object.keys(mapping).sort((a, b) => b.length - a.length);
+    const values = Object.values(mapping);
+
+    // Helper: camelCase to kebab-case
+    const toKebab = (str) => str.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
+    // Helper: kebab-case to camelCase
+    const toCamel = (str) => str.replace(/-(\w)/g, (_, c) => c.toUpperCase());
+
+    return {
+        name: 'replace-tag-names',
+        resolveId(source) {
+            if (source.startsWith('kwc/')) {
+                const name = source.slice(4);
+                const tagName = `kwc-${toKebab(name)}`;
+                if (values.includes(tagName)) {
+                    const originalTag = keys.find(k => mapping[k] === tagName);
+                    if (originalTag) {
+                        const originalName = originalTag.replace(/^kwc-/, '');
+                        const originalCamel = toCamel(originalName);
+                        const candidate = path.resolve(process.cwd(), 'app/kwc', originalCamel, `${originalCamel}.js`);
+                        if (existsSync(candidate)) {
+                            return candidate;
+                        }
+                    }
+                }
+            }
+            return null;
+        },
+        transform(code, id) {
+            if (!/\.(js|html|css)$/.test(id)) { return null; }
+            if (id.includes('node_modules')) { return null; }
+
+            let newCode = code;
+            let changed = false;
+            keys.forEach(key => {
+                const value = mapping[key];
+                const regex = new RegExp(key, 'g');
+                if (regex.test(newCode)) {
+                    newCode = newCode.replace(regex, value);
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                return { code: newCode, map: null };
+            }
+            return null;
+        }
+    };
+}
+
+/**
+ * 包装 KWC 插件，强制规范化文件路径
+ */
+function kwcWrapper(options) {
+    const plugin = kwc(options);
+    const originalTransform = plugin.transform;
+
+    plugin.transform = function (src, id) {
+        // 将 Windows 反斜杠转换为正斜杠
+        const normalizedId = id.split(path.sep).join('/');
+        return originalTransform.call(this, src, normalizedId);
+    };
+
+    return plugin;
+}
+
 export default (args) => {
     // 开发模式使用单一入口以支持开发服务器
     const isDev = args.watch && process.env.NODE_ENV === 'development';
@@ -148,7 +244,7 @@ export default (args) => {
             // 🔥 仅生产 build 清 dist
             cleanDist({
                 dir: 'dist',
-                enabled: !isDev && !process.env.TARGET_COMPONENT
+                enabled: !args.watch && !isDev && !process.env.TARGET_COMPONENT
             }),
             kdBaseComponentResolver(),
             alias({
@@ -163,26 +259,27 @@ export default (args) => {
             }),
             // 确保在 kwc() 之前加上 watchCss
             (isDev || isDebugBuild) && watchCss(),
-            // 仅在 Build 模式下启用内联图标插件，且必须在 kwc() 之前
-            !isDev && inlineShoelaceIcons(),
-            kwc({ rootDir: 'app' }),
+            // 启用内联图标插件，且必须在 kwc() 之前
+            inlineShoelaceIcons(),
+            kwcWrapper({ rootDir: 'app' }),
+            replaceTagNames(),
             resolve(),
             commonjs({
                 include: ['node_modules/@kdcloudjs/kwc-shared-utils/**', 'node_modules/@kdcloudjs/kwc-i18n/**']
             }),
             isDev && serve({
+                host: 'localhost',
                 open: true,
                 port: 3000,
                 contentBase: ['dist']
             }),
             isDev && livereload('dist'),
             // 复制静态资源
-            isDev && copy({
+            copy({
                 targets: [
-                    { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
-                    { src: 'app/kwc/logo.png', dest: 'dist' },
-                    // Build 模式下已内联，无需复制 Shoelace 资源
-                    { src: 'node_modules/@kdcloudjs/shoelace/dist/assets', dest: 'dist/kwc/assets/shoelace' }
+                    isDev && { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
+                    isDev && { src: 'app/kwc/logo.png', dest: 'dist' },
+                    isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/assets', dest: path.join('dist', 'kwc/assets/shoelace') }
                 ].filter(Boolean)
             }),
             isDev && {

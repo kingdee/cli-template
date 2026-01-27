@@ -7,7 +7,7 @@
         "build": "cross-env NODE_ENV=production node scripts/build.js",
         "dev": "cross-env NODE_ENV=development rollup -c rollup.config.js --watch",
         "server": "node server.js",
-        "debug": "cross-env NODE_ENV=production DEBUG_BUILD=true node scripts/build.js",
+        "debug": "cross-env NODE_ENV=production DEBUG_BUILD=true node scripts/build.js --watch",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix"
     },
