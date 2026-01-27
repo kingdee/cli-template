@@ -161,8 +161,8 @@ export default (args) => {
             }),
             // 确保在 kwc() 之前加上 watchCss
             (isDev || isDebugBuild) && watchCss(),
-            // 仅在 Build 模式下启用内联图标插件，且必须在 kwc() 之前
-            !isDev && inlineShoelaceIcons(),
+            // 启用内联图标插件，且必须在 kwc() 之前
+            inlineShoelaceIcons(),
             kwc({ rootDir: 'app/kwc' }),
             resolve(),
             commonjs({
@@ -170,17 +170,15 @@ export default (args) => {
             }),
             isDev && serve({
                 open: true,
-                port: 3000,
-                contentBase: ['dist']
+                port: 8000,
+                contentBase: ['dist', 'node_modules']
             }),
             isDev && livereload('dist'),
             // 复制静态资源
-            isDev && copy({
+            copy({
                 targets: [
-                    { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
-                    { src: 'app/kwc/logo.png', dest: 'dist' },
-                    // Build 模式下已内联，无需复制 Shoelace 资源
-                    { src: 'node_modules/@kdcloudjs/shoelace/dist/assets', dest: 'dist/kwc/assets/shoelace' }
+                    isDev && { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
+                    isDev && { src: 'app/kwc/logo.png', dest: 'dist' }
                 ].filter(Boolean)
             }),
             isDev && {
