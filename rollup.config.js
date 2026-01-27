@@ -130,8 +130,8 @@ export default (args) => {
             }),
             isDev
             && serve({
-                open: false,
-                port: 8000,
+                open: true,
+                port: 3000,
                 contentBase: ['dist']
             }),
             isDev && livereload('dist'),
