@@ -4,10 +4,10 @@
     "description": "kwc template",
     "type": "module",
     "scripts": {
-        "build": "cross-env NODE_ENV=production rollup -c rollup.config.js",
+        "build": "cross-env NODE_ENV=production node scripts/build.js",
         "dev": "cross-env NODE_ENV=development rollup -c rollup.config.js --watch",
         "server": "node server.js",
-        "debug": "cross-env NODE_ENV=production DEBUG_BUILD=true rollup -c rollup.config.js --watch",
+        "debug": "cross-env NODE_ENV=production DEBUG_BUILD=true node scripts/build.js",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix"
     },
@@ -16,7 +16,7 @@
         "@kdcloudjs/kwc": "1.0.0",
         "@kdcloudjs/kwc-i18n": "^0.0.1",
         "@kdcloudjs/kwc-shared-utils": "^0.0.2",
-        "@kdcloudjs/shoelace": "^0.0.2"
+        "@kdcloudjs/shoelace": "^1.0.0"
     },
     "devDependencies": {
         "@kdcloudjs/eslint-config-kwc": "^1.0.2",

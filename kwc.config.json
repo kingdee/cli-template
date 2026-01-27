@@ -1,7 +1,7 @@
 {
     "modules": [
         {
-            "dir": "app/kwc"
+            "dir": "app"
         }
     ]
 }

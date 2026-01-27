@@ -5,7 +5,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import terser from '@rollup/plugin-terser';
-import { readdirSync, existsSync, rmSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import path, { join } from 'path';
 import alias from '@rollup/plugin-alias';
 import copy from 'rollup-plugin-copy';
@@ -74,17 +74,19 @@ function cleanDist({ dir = 'dist', enabled = true } = {}) {
 
 const getComponentEntries = () => {
     const componentsDir = 'app/kwc';
-    const componentFolders = readdirSync(componentsDir, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name);
-    const entries = {};
-    for (const folder of componentFolders) {
+
+    // 🔑 Support building a single component via env var
+    if (process.env.TARGET_COMPONENT) {
+        if (process.env.TARGET_COMPONENT === 'main') {
+            return { main: join(componentsDir, 'main.js') };
+        }
+        const folder = process.env.TARGET_COMPONENT;
         const filePath = join(componentsDir, folder, `${folder}.js`);
         if (existsSync(filePath)) {
-            entries[`kwc/${folder}`] = filePath;
+            return { [`kwc/${folder}`]: filePath };
         }
     }
-    return entries;
+    return {};
 };
 
 // 🔑 新增 watchCss 插件：保证 .css 文件修改时 rollup 会重新编译
@@ -146,7 +148,7 @@ export default (args) => {
             // 🔥 仅生产 build 清 dist
             cleanDist({
                 dir: 'dist',
-                enabled: !isDev
+                enabled: !isDev && !process.env.TARGET_COMPONENT
             }),
             kdBaseComponentResolver(),
             alias({
@@ -163,7 +165,7 @@ export default (args) => {
             (isDev || isDebugBuild) && watchCss(),
             // 仅在 Build 模式下启用内联图标插件，且必须在 kwc() 之前
             !isDev && inlineShoelaceIcons(),
-            kwc({ rootDir: 'app/kwc' }),
+            kwc({ rootDir: 'app' }),
             resolve(),
             commonjs({
                 include: ['node_modules/@kdcloudjs/kwc-shared-utils/**', 'node_modules/@kdcloudjs/kwc-i18n/**']
