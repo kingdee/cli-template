@@ -254,7 +254,6 @@ export default (args) => {
             }),
             replace({
                 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-                'import.meta.env.SHOELACE_BASE_URL': isDev ? JSON.stringify('/kwc/assets/shoelace/') : 'new URL(\'../assets/shoelace/\', import.meta.url).href',
                 preventAssignment: true
             }),
             // 确保在 kwc() 之前加上 watchCss
@@ -278,9 +277,7 @@ export default (args) => {
             copy({
                 targets: [
                     isDev && { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
-                    isDev && { src: 'app/kwc/logo.png', dest: 'dist' },
-                    isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/assets', dest: path.join('dist', 'kwc/assets/shoelace') },
-                    isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/themes/light.css', dest: 'dist/themes' }
+                    isDev && { src: 'app/kwc/logo.png', dest: 'dist' }
                 ].filter(Boolean)
             }),
             isDev && {
