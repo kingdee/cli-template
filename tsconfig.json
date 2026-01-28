@@ -24,7 +24,7 @@
     "paths": {
       "@/*": ["app/*"]
     },
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals", "node_modules/@kdcloudjs/shoelace/dist/types/vue"]
   },
   "include": ["app/**/*.ts", "app/**/*.d.ts", "app/**/*.tsx", "app/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]
