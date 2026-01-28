@@ -279,7 +279,8 @@ export default (args) => {
                 targets: [
                     isDev && { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
                     isDev && { src: 'app/kwc/logo.png', dest: 'dist' },
-                    isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/assets', dest: path.join('dist', 'kwc/assets/shoelace') }
+                    isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/assets', dest: path.join('dist', 'kwc/assets/shoelace') },
+                    isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/themes/light.css', dest: 'dist/themes' }
                 ].filter(Boolean)
             }),
             isDev && {
@@ -296,11 +297,12 @@ export default (args) => {
 
                     // 写入内容
                     const html = `<!doctype html>
-<html>
+<html class="sl-theme-light">
   <head>
     <meta charset="utf-8"/>
     <title>KWC Dev</title>
     <link rel="stylesheet" href="/index.css"/>
+    <link rel="stylesheet" href="/themes/light.css"/>
   </head>
   <body>
     <script type="module" src="/index.js"></script>
