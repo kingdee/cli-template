@@ -277,7 +277,8 @@ export default (args) => {
             copy({
                 targets: [
                     isDev && { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
-                    isDev && { src: 'app/kwc/logo.png', dest: 'dist' }
+                    isDev && { src: 'app/kwc/logo.png', dest: 'dist' },
+                    isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/themes/light.css', dest: 'dist/themes' }
                 ].filter(Boolean)
             }),
             isDev && {
