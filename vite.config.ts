@@ -2,7 +2,44 @@
 import { defineConfig, ESBuildOptions } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
+import fs from 'fs';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
+
+// 自定义插件：处理 lang 目录下的 json 文件
+const copyLangPlugin = () => {
+    return {
+        name: 'copy-lang-files',
+        writeBundle() {
+            const targetComponent = process.env.TARGET_COMPONENT;
+            if (!targetComponent) {return;}
+
+            const outDir = path.resolve('dist', 'kwc', targetComponent);
+            const langDir = path.resolve('app', 'kwc', 'static', 'lang');
+
+            if (fs.existsSync(langDir)) {
+                const destDir = path.join(outDir, 'lang');
+                if (!fs.existsSync(destDir)) {
+                    fs.mkdirSync(destDir, { recursive: true });
+                }
+
+                fs.readdirSync(langDir).forEach(file => {
+                    if (file.endsWith('.json')) {
+                        fs.copyFileSync(path.join(langDir, file), path.join(destDir, file));
+                        console.log(`[copy-lang] Copied ${file} to ${destDir}`);
+                    }
+                });
+            }
+        },
+        configureServer(server) {
+            server.middlewares.use((req, res, next) => {
+                if (req.url.startsWith('/lang/') && req.url.endsWith('.json')) {
+                    req.url = req.url.replace('/lang/', '/app/kwc/static/lang/');
+                }
+                next();
+            });
+        }
+    };
+};
 
 export default defineConfig(({ command, mode }) => {
   const isBuild = command === 'build';
@@ -28,7 +65,8 @@ export default defineConfig(({ command, mode }) => {
 
     plugins: [
       vue(),
-      cssInjectedByJsPlugin()
+      cssInjectedByJsPlugin(),
+      copyLangPlugin()
     ].filter(Boolean),
 
     build: {
