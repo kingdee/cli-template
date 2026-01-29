@@ -270,7 +270,7 @@ export default (args) => {
                 host: 'localhost',
                 open: true,
                 port: 3000,
-                contentBase: ['dist']
+                contentBase: ['dist', 'app/kwc/static']
             }),
             isDev && livereload('dist'),
             // 复制静态资源
@@ -278,7 +278,11 @@ export default (args) => {
                 targets: [
                     isDev && { src: 'node_modules/@kdcloudjs/kingdee-base-components/dist/index.css', dest: 'dist' },
                     isDev && { src: 'app/kwc/logo.png', dest: 'dist' },
-                    isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/themes/light.css', dest: 'dist/themes' }
+                    isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/themes/light.css', dest: 'dist/themes' },
+                    !isDev && process.env.TARGET_COMPONENT && {
+                        src: 'app/kwc/static/lang',
+                        dest: `dist/kwc/${process.env.TARGET_COMPONENT}`
+                    }
                 ].filter(Boolean)
             }),
             isDev && {
