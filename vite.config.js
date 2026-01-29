@@ -15,7 +15,7 @@ const copyLangPlugin = () => {
             if (!targetComponent) {return;}
 
             const outDir = path.resolve('dist', 'kwc', targetComponent);
-            const langDir = path.resolve('app/kwc/static/lang');
+            const langDir = path.resolve('app', 'kwc', 'static', 'lang');
 
             if (fs.existsSync(langDir)) {
                 const destDir = path.join(outDir, 'lang');
@@ -33,8 +33,8 @@ const copyLangPlugin = () => {
         },
         configureServer(server) {
             server.middlewares.use((req, res, next) => {
-                if (req.url.startsWith('/kwc/static/lang/') && req.url.endsWith('.json')) {
-                    req.url = req.url.replace('/kwc/static/lang/', '/lang/');
+                if (req.url.startsWith('/lang/') && req.url.endsWith('.json')) {
+                    req.url = req.url.replace('/lang/', '/static/lang/');
                 }
                 next();
             });

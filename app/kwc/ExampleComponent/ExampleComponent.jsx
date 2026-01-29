@@ -9,7 +9,7 @@ import logoUrl from './logo.png';
 function ExampleComponent() {
     const [count, setCount] = useState(0);
 
-    useEffect(async () => {
+    useEffect(() => {
         // 加载多语言资源
 
         async function initI18n() {
