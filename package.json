@@ -12,10 +12,8 @@
         "lint:fix": "eslint . --fix"
     },
     "dependencies": {
-        "@kdcloudjs/kingdee-base-components": "^0.0.7",
         "@kdcloudjs/kwc": "1.0.0",
-        "@kdcloudjs/kwc-i18n": "^0.0.1",
-        "@kdcloudjs/kwc-shared-utils": "^0.0.5",
+        "@kdcloudjs/kwc-shared-utils": "0.x",
         "@kdcloudjs/shoelace": "^1.0.0"
     },
     "devDependencies": {

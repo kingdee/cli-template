@@ -5,51 +5,16 @@ import commonjs from '@rollup/plugin-commonjs';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import terser from '@rollup/plugin-terser';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readdirSync } from 'fs';
 import path, { join } from 'path';
 import alias from '@rollup/plugin-alias';
 import copy from 'rollup-plugin-copy';
 import { rimrafSync } from 'rimraf';
 
-function inlineShoelaceIcons() {
-    return {
-        name: 'inline-shoelace-icons',
-        transform(code, id) {
-            if (!id.endsWith('.html')) { return null; }
-
-            const iconRegex = /<sl-icon([\s\S]*?)name=["']([^"']+)["']([\s\S]*?)>/g;
-
-            const newCode = code.replace(iconRegex, (match, before, iconName, after) => {
-                const iconPath = path.resolve(process.cwd(), 'node_modules/@kdcloudjs/shoelace/dist/assets/icons', `${iconName}.svg`);
-
-                if (existsSync(iconPath)) {
-                    try {
-                        const svgContent = readFileSync(iconPath, 'utf-8');
-                        const dataUri = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
-
-                        console.log(`[inline-shoelace-icons] Inlined icon: ${iconName}`);
-
-                        return `<sl-icon${before}src="${dataUri}"${after}>`;
-                    } catch (e) {
-                        console.warn(`[inline-shoelace-icons] Failed to read icon: ${iconName}`, e);
-                        return match;
-                    }
-                } else {
-                    console.warn(`[inline-shoelace-icons] Icon not found: ${iconName}`);
-                    return match;
-                }
-            });
-
-            return {
-                code: newCode,
-                map: null
-            };
-        }
-    };
-}
-
 const isDebugBuild = process.env.DEBUG_BUILD === 'true';
 const isProdBuild = process.env.NODE_ENV === 'production' && !isDebugBuild;
+const isWin = process.platform === 'win32';
+const useRobocopy = isWin && (process.env.COPY_ICONS_FULL !== 'false');
 
 /**
  * 清理 dist（仅 build 阶段）
@@ -115,25 +80,6 @@ function watchCss() {
         load(id) {
             if (id.endsWith('.css')) {
                 this.addWatchFile(id);
-            }
-            return null;
-        }
-    };
-}
-
-function kdBaseComponentResolver() {
-    return {
-        name: 'kd-base-component-resolver',
-
-        resolveId(source) {
-            // 匹配 kd/xxx
-            if (source.startsWith('kd/')) {
-                const compName = source.slice(3); // 去掉 "kd/"
-                return path.resolve(
-                    process.cwd(),
-                    'node_modules/@kdcloudjs/kingdee-base-components/dist/esm/kd',
-                    `${compName}.js`
-                );
             }
             return null;
         }
@@ -246,7 +192,6 @@ export default (args) => {
                 dir: 'dist',
                 enabled: !args.watch && !isDev && !process.env.TARGET_COMPONENT
             }),
-            kdBaseComponentResolver(),
             alias({
                 entries: [
                     { find: 'kingdee', replacement: resolve('node_modules/@kdcloudjs/kwc-shared-utils') }
@@ -258,8 +203,6 @@ export default (args) => {
             }),
             // 确保在 kwc() 之前加上 watchCss
             (isDev || isDebugBuild) && watchCss(),
-            // 启用内联图标插件，且必须在 kwc() 之前
-            inlineShoelaceIcons(),
             kwcWrapper({ rootDir: 'app' }),
             replaceTagNames(),
             resolve(),
@@ -270,7 +213,7 @@ export default (args) => {
                 host: 'localhost',
                 open: true,
                 port: 3000,
-                contentBase: ['dist', 'app/kwc/static']
+                contentBase: ['dist', 'app/kwc/static', 'node_modules/@kdcloudjs/shoelace/dist']
             }),
             isDev && livereload('dist'),
             // 复制静态资源
@@ -282,6 +225,12 @@ export default (args) => {
                     !isDev && process.env.TARGET_COMPONENT && {
                         src: 'app/kwc/static/lang',
                         dest: `dist/kwc/${process.env.TARGET_COMPONENT}`
+                    },
+                    !isDev && process.env.TARGET_COMPONENT && !useRobocopy && {
+                        src: 'node_modules/@kdcloudjs/shoelace/dist/assets/icons',
+                        dest: process.env.TARGET_COMPONENT === 'main'
+                            ? 'dist/assets'
+                            : `dist/kwc/${process.env.TARGET_COMPONENT}/assets`
                     }
                 ].filter(Boolean)
             }),

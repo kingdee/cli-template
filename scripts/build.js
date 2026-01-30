@@ -4,6 +4,8 @@ import { execSync } from 'child_process';
 
 const args = process.argv.slice(2);
 const isWatch = args.includes('--watch');
+const isWin = process.platform === 'win32';
+const copyIconsFull = process.env.COPY_ICONS_FULL === 'true';
 
 // Clean dist directory once at the beginning
 if (existsSync('dist')) {
@@ -60,6 +62,15 @@ if (isWatch) {
                 console.error(`Failed to build ${folder}`);
                 process.exit(1);
             }
+            if (isWin && copyIconsFull) {
+                const src = join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
+                const dest = folder === 'main'
+                    ? join('dist', 'assets', 'icons')
+                    : join('dist', 'kwc', folder, 'assets', 'icons');
+                try {
+                    execSync(`robocopy "${src}" "${dest}" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
+                } catch (_e) { String(_e); }
+            }
         } else {
             console.warn(`Skipping ${folder}: entry file not found.`);
         }
@@ -80,6 +91,13 @@ if (isWatch) {
         } catch (e) {
             console.error('Failed to build main.js');
             process.exit(1);
+        }
+        if (isWin && copyIconsFull) {
+            const src = join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
+            const dest = join('dist', 'assets', 'icons');
+            try {
+                execSync(`robocopy "${src}" "${dest}" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
+            } catch (_e) { String(_e); }
         }
     }
 }
