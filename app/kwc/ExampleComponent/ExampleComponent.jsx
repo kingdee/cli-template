@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { t, init } from '@kdcloudjs/kwc-shared-utils/i18n';
+import React, { useState } from 'react';
 import '@kdcloudjs/shoelace/dist/components/button/button.js';
 import '@kdcloudjs/shoelace/dist/components/icon/icon.js';
 import '@kdcloudjs/shoelace/dist/themes/light.css';
@@ -8,16 +7,6 @@ import logoUrl from './logo.png';
 
 function ExampleComponent() {
     const [count, setCount] = useState(0);
-
-    useEffect(() => {
-        // 加载多语言资源
-
-        async function initI18n() {
-            await init();
-            console.log(t('myButton.clickMe'));
-        }
-        initI18n();
-    }, []);
 
     return (
         <div className={styles.container}>

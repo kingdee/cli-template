@@ -35,7 +35,7 @@
     "vitest": "^1.2.0"
   },
   "dependencies": {
-    "@kdcloudjs/kwc-shared-utils": "^0.0.5",
-    "@kdcloudjs/shoelace": "^1.0.0"
+    "@kdcloudjs/kwc-shared-utils": "0.x",
+    "@kdcloudjs/shoelace": "^1.0.1"
   }
 }
