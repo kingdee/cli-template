@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import fs from 'fs';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
+import { execSync } from 'child_process';
 
 // 自定义插件：处理 lang 目录下的 json 文件
 const copyLangPlugin = () => {
@@ -11,7 +12,7 @@ const copyLangPlugin = () => {
         name: 'copy-lang-files',
         writeBundle() {
             const targetComponent = process.env.TARGET_COMPONENT;
-            if (!targetComponent) {return;}
+            if (!targetComponent) { return; }
 
             const outDir = path.resolve('dist', 'kwc', targetComponent);
             const langDir = path.resolve('app', 'kwc', 'static', 'lang');
@@ -40,6 +41,9 @@ const copyLangPlugin = () => {
         }
     };
 };
+
+const copyIconPlugin = () => {
+}
 
 export default defineConfig(({ command, mode }) => {
     const isBuild = command === 'build';
@@ -72,7 +76,8 @@ export default defineConfig(({ command, mode }) => {
                 }
             }),
             cssInjectedByJsPlugin(),
-            copyLangPlugin()
+            copyLangPlugin(),
+            copyIconPlugin()
         ].filter(Boolean),
 
         build: {

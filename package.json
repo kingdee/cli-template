@@ -13,12 +13,12 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "vue": "^3.4.0"
+    "vue": "^3.4.0",
+    "@kdcloudjs/kwc-shared-utils": "0.x",
+    "@kdcloudjs/shoelace": "^1.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@kdcloudjs/kwc-shared-utils": "0.x",
-    "@kdcloudjs/shoelace": "^1.0.0",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/test-utils": "^2.4.0",
     "eslint": "^9.39.2",
