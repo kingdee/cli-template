@@ -2,11 +2,11 @@
 import { build } from 'vite';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
 const componentsDir = path.resolve('app/kwc');
 const distDir = path.resolve('dist');
 const tempEntryDir = path.resolve('temp-entry');
-const shoelaceIconsDir = path.resolve('node_modules/@kdcloudjs/shoelace/dist/assets/icons');
 
 if (fs.existsSync(distDir)) {
   console.log('Cleaning dist directory...');
@@ -38,44 +38,13 @@ for (const component of components) {
   const componentFile = path.join(componentsDir, component, `${component}.ce.vue`);
   const relativePath = path.relative(tempEntryDir, componentFile).replace(/\\/g, '/');
 
-  const vueContent = fs.readFileSync(componentFile, 'utf-8');
-  const iconMatches = [...vueContent.matchAll(/<sl-icon[^>]+name=["']([^"']+)["']/g)];
-  const usedIcons = new Set(iconMatches.map(m => m[1]));
-
-  const iconMap = {};
-  for (const iconName of usedIcons) {
-    const iconPath = path.join(shoelaceIconsDir, `${iconName}.svg`);
-    if (fs.existsSync(iconPath)) {
-      iconMap[iconName] = fs.readFileSync(iconPath, 'utf-8');
-    } else {
-      console.warn(`Warning: Icon ${iconName} not found in Shoelace assets.`);
-    }
-  }
-
-  const haveIcons = Object.keys(iconMap).length > 0;
-  const iconRegistrationImport = haveIcons ? `
-import { registerIconLibrary } from '@kdcloudjs/shoelace/dist/utilities/icon-library.js';
-` : '';
-  const iconRegistrationCode = haveIcons ? `
-const icons = ${JSON.stringify(iconMap)};
-
-registerIconLibrary('default', {
-  resolver: name => {
-    if (icons[name]) {
-      return \`data:image/svg+xml,\${encodeURIComponent(icons[name])}\`;
-    }
-    return '';
-  },
-  mutator: svg => svg.setAttribute('fill', 'currentColor')
-});
-` : '';
-
   const entryContent = `
 import { defineCustomElement } from 'vue'
-${iconRegistrationImport}
 import Component from '${relativePath}'
+import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js'
 
-${iconRegistrationCode}
+const baseUrl = '.'
+setBasePath(new URL(baseUrl, import.meta.url).href)
 
 const Element = defineCustomElement(Component)
 function register(name = '${component.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}') {
@@ -101,6 +70,29 @@ export { Element, register }
         }
       }
     });
+
+    const iconsSourceDir = path.resolve('node_modules/@kdcloudjs/shoelace/dist/assets/icons');
+    const iconsDestDir = path.join(distDir, 'kwc', component, 'assets/icons');
+
+    if (fs.existsSync(iconsSourceDir)) {
+      console.log(`Copying icons for ${component}...`);
+      if (process.platform === 'win32') {
+        try {
+          const src = path.join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
+          execSync(`robocopy "${src}" "${iconsDestDir}" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
+        } catch (e: any) {
+          // Robocopy exit codes 0-7 are success
+          if (e.status > 7) {
+            throw e;
+          }
+        }
+      } else {
+        fs.cpSync(iconsSourceDir, iconsDestDir, { recursive: true });
+      }
+    } else {
+      console.warn(`Warning: Icons source directory not found at ${iconsSourceDir}`);
+    }
+
     console.log(`✓ ${component} built successfully`);
   } catch (e) {
     console.error(`✗ Failed to build ${component}:`, e);
