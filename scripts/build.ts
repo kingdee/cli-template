@@ -71,28 +71,6 @@ export { Element, register }
       }
     });
 
-    const iconsSourceDir = path.resolve('node_modules/@kdcloudjs/shoelace/dist/assets/icons');
-    const iconsDestDir = path.join(distDir, 'kwc', component, 'assets/icons');
-
-    if (fs.existsSync(iconsSourceDir)) {
-      console.log(`Copying icons for ${component}...`);
-      if (process.platform === 'win32') {
-        try {
-          const src = path.join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
-          execSync(`robocopy "${src}" "${iconsDestDir}" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
-        } catch (e: any) {
-          // Robocopy exit codes 0-7 are success
-          if (e.status > 7) {
-            throw e;
-          }
-        }
-      } else {
-        fs.cpSync(iconsSourceDir, iconsDestDir, { recursive: true });
-      }
-    } else {
-      console.warn(`Warning: Icons source directory not found at ${iconsSourceDir}`);
-    }
-
     console.log(`✓ ${component} built successfully`);
   } catch (e) {
     console.error(`✗ Failed to build ${component}:`, e);
