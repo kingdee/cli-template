@@ -207,7 +207,7 @@ export default (args) => {
             replaceTagNames(),
             resolve(),
             commonjs({
-                include: ['node_modules/@kdcloudjs/kwc-shared-utils/**', 'node_modules/@kdcloudjs/kwc-i18n/**']
+                include: ['node_modules/@kdcloudjs/kwc-shared-utils/**', 'node_modules/@kdcloudjs/kwc-i18n/**', 'node_modules/lodash/**']
             }),
             isDev && serve({
                 host: 'localhost',
