@@ -56,7 +56,6 @@ const copyIconPlugin = () => {
         console.log(`Copying icons for ${targetComponent}...`);
         if (process.platform === 'win32') {
           try {
-            const src = path.join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
             execSync(`robocopy "${iconDir}" "${outDir}/assets/icons" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
           } catch (e) {
             if (e.status > 7) {
@@ -97,7 +96,13 @@ export default defineConfig(({ command, mode }) => {
     },
 
     plugins: [
-      vue(),
+      vue({
+        template: {
+          compilerOptions: {
+            isCustomElement: (tag) => tag.startsWith('sl-')
+          }
+        }
+      }),
       cssInjectedByJsPlugin(),
       copyLangPlugin(),
       copyIconPlugin()
