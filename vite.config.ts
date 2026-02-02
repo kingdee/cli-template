@@ -70,8 +70,7 @@ const copyIconPlugin = () => {
       }
     }
   };
-}
-
+};
 
 export default defineConfig(({ command, mode }) => {
   const isBuild = command === 'build';
