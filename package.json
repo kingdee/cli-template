@@ -16,10 +16,12 @@
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
+  "dependencies": {
+    "@kdcloudjs/kwc-shared-utils": "0.x",
+    "@kdcloudjs/shoelace": "^1.0.1"
+  },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@kdcloudjs/kwc-shared-utils": "0.x",
-    "@kdcloudjs/shoelace": "^1.0.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^16.3.1",
     "@types/express": "^5.0.6",
