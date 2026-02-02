@@ -2,7 +2,6 @@
 import { build } from 'vite';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 
 const componentsDir = path.resolve('app/kwc');
 const distDir = path.resolve('dist');
