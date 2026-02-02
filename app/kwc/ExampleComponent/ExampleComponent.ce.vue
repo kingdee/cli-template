@@ -62,18 +62,12 @@
 
 <script setup>
 import { ref } from 'vue';
-import { t, init } from '@kdcloudjs/kwc-shared-utils/i18n';
 import '@kdcloudjs/shoelace/dist/components/button/button.js';
 import '@kdcloudjs/shoelace/dist/components/icon/icon.js';
 import '@kdcloudjs/shoelace/dist/themes/light.css';
 import logoUrl from './logo.png';
 
 const count = ref(0);
-
-init().then(() => {
-  console.log(t('myButton.clickMe'));
-});
-
 </script>
 
 <style scoped lang="scss">
