@@ -41,6 +41,30 @@ const copyLangPlugin = () => {
   };
 };
 
+// 自定义插件：处理 shoelace 主题文件的 Dev Server 支持
+const serveShoelaceThemePlugin = () => {
+  return {
+    name: 'serve-shoelace-theme',
+    apply: 'serve',
+    configureServer(server: any) {
+      server.middlewares.use((req: any, res: any, next: any) => {
+        if (req.url === '/themes/light.css') {
+          const cssPath = path.resolve('node_modules/@kdcloudjs/shoelace/dist/themes/light.css');
+          if (fs.existsSync(cssPath)) {
+            res.setHeader('Content-Type', 'text/css');
+            res.end(fs.readFileSync(cssPath));
+            return;
+          }
+        }
+        next();
+      });
+    }
+  };
+};
+
+
+
+
 export default defineConfig(({ command, mode }: ConfigEnv) => {
   const isBuild = command === 'build';
   const isProdBuild = isBuild && mode === 'production';
@@ -102,7 +126,8 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
     plugins: [
       react(),
       cssInjectedByJsPlugin(),
-      copyLangPlugin()
+      copyLangPlugin(),
+      !isBuild && serveShoelaceThemePlugin()
     ],
     build: {
       chunkSizeWarningLimit: 1024,
