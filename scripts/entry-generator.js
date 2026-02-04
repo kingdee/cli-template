@@ -2,8 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export function generateEntries(componentsDir, tempEntryDir) {
-  const entryPoints = {};
-  const shoelaceIconsDir = path.resolve('node_modules/@kdcloudjs/shoelace/dist/assets/icons');
+    const entryPoints = {};
 
     // 确保临时目录存在
     if (fs.existsSync(tempEntryDir)) {
@@ -21,58 +20,26 @@ export function generateEntries(componentsDir, tempEntryDir) {
     });
 
     components.forEach(componentName => {
-        const componentPathJsx = path.join(componentsDir, componentName, `${componentName}.jsx`);
-        const componentPathJs = path.join(componentsDir, componentName, `${componentName}.js`);
+        const componentPathTsx = path.join(componentsDir, componentName, `${componentName}.jsx`);
+        const componentPathTs = path.join(componentsDir, componentName, `${componentName}.js`);
 
         let fileExtension;
-        if (fs.existsSync(componentPathJsx)) {
+        if (fs.existsSync(componentPathTsx)) {
             fileExtension = '.jsx';
-        } else if (fs.existsSync(componentPathJs)) {
+        } else if (fs.existsSync(componentPathTs)) {
             fileExtension = '.js';
         } else {
             return; // 如果两种文件都不存在，则跳过该组件
         }
 
-        const filePath = fileExtension === '.jsx' ? componentPathJsx : componentPathJs;
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        const iconMatches = [...fileContent.matchAll(/<sl-icon[^>]+name=["']([^"']+)["']/g)];
-        const usedIcons = new Set(iconMatches.map(m => m[1]));
-
-        const iconMap = {};
-        for (const iconName of usedIcons) {
-          const iconPath = path.join(shoelaceIconsDir, `${iconName}.svg`);
-          if (fs.existsSync(iconPath)) {
-            iconMap[iconName] = fs.readFileSync(iconPath, 'utf-8');
-          } else {
-            console.warn(`Warning: Icon ${iconName} not found in Shoelace assets.`);
-          }
-        }
-
-        const haveIcons = Object.keys(iconMap).length > 0;
-        const iconRegistrationImport = haveIcons ? `
-      import { registerIconLibrary } from '@kdcloudjs/shoelace/dist/utilities/icon-library.js';
-      ` : '';
-        const iconRegistrationCode = haveIcons ? `
-      const icons = ${JSON.stringify(iconMap)};
-
-      registerIconLibrary('default', {
-        resolver: name => {
-          if (icons[name]) {
-            return \`data:image/svg+xml,\${encodeURIComponent(icons[name])}\`;
-          }
-          return '';
-        },
-        mutator: svg => svg.setAttribute('fill', 'currentColor')
-      });
-      ` : '';
-
         const entryContent = `
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-${iconRegistrationImport}
 import Component from '../app/kwc/${componentName}/${componentName}${fileExtension}';
+import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js'
 
-${iconRegistrationCode}
+const baseUrl = window.location.origin + window.location.pathname.slice(0, window.location.pathname.lastIndexOf('/') + 1);
+setBasePath(baseUrl + 'public/kwc');
 
 let root = null;
 
