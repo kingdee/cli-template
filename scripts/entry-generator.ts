@@ -3,7 +3,6 @@ import * as path from 'path';
 
 export function generateEntries(componentsDir: string, tempEntryDir: string): Record<string, string> {
   const entryPoints: Record<string, string> = {};
-  const shoelaceIconsDir = path.resolve('node_modules/@kdcloudjs/shoelace/dist/assets/icons');
 
   // 确保临时目录存在
   if (fs.existsSync(tempEntryDir)) {
@@ -45,46 +44,14 @@ export function generateEntries(componentsDir: string, tempEntryDir: string): Re
       return; // 如果文件都不存在，则跳过该组件
     }
 
-    const filePath = path.join(componentsDir, componentName, `${fileName}${fileExtension}`);
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const iconMatches = [...fileContent.matchAll(/<sl-icon[^>]+name=["']([^"']+)["']/g)];
-    const usedIcons = new Set(iconMatches.map(m => m[1]));
-
-    const iconMap: Record<string, string> = {};
-    for (const iconName of usedIcons) {
-      const iconPath = path.join(shoelaceIconsDir, `${iconName}.svg`);
-      if (fs.existsSync(iconPath)) {
-        iconMap[iconName] = fs.readFileSync(iconPath, 'utf-8');
-      } else {
-        console.warn(`Warning: Icon ${iconName} not found in Shoelace assets.`);
-      }
-    }
-
-    const haveIcons = Object.keys(iconMap).length > 0;
-    const iconRegistrationImport = haveIcons ? `
-      import { registerIconLibrary } from '@kdcloudjs/shoelace/dist/utilities/icon-library.js';
-      ` : '';
-    const iconRegistrationCode = haveIcons ? `
-      const icons = ${JSON.stringify(iconMap)};
-
-      registerIconLibrary('default', {
-        resolver: name => {
-          if (icons[name]) {
-            return \`data:image/svg+xml,\${encodeURIComponent(icons[name])}\`;
-          }
-          return '';
-        },
-        mutator: svg => svg.setAttribute('fill', 'currentColor')
-      });
-      ` : '';
     const entryContent = `
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-${iconRegistrationImport}
-
 import Component from '../app/kwc/${componentName}/${fileName}${fileExtension}';
+import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js'
 
-${iconRegistrationCode}
+const baseUrl = window.location.origin + window.location.pathname.slice(0, window.location.pathname.lastIndexOf('/') + 1);
+setBasePath(baseUrl + 'public/kwc');
 
 let root: ReactDOM.Root | null = null;
 
