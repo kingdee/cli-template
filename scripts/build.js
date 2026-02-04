@@ -43,8 +43,8 @@ import { defineCustomElement } from 'vue'
 import Component from '${relativePath}'
 import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js'
 
-const baseUrl = '.'
-setBasePath(new URL(baseUrl, import.meta.url).href)
+const baseUrl = window.location.origin + window.location.pathname.slice(0, window.location.pathname.lastIndexOf('/') + 1);
+setBasePath(baseUrl + 'public/kwc');
 
 const Element = defineCustomElement(Component)
 function register(name = '${component.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}') {
