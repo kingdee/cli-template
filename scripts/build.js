@@ -1,11 +1,9 @@
 import { readdirSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 
 const args = process.argv.slice(2);
 const isWatch = args.includes('--watch');
-const isWin = process.platform === 'win32';
-const copyIconsFull = process.env.COPY_ICONS_FULL === 'true';
 
 // Clean dist directory once at the beginning
 if (existsSync('dist')) {
@@ -30,18 +28,47 @@ componentFolders.forEach(folder => {
 });
 
 if (isWatch) {
-    console.log('\nStarting Watch Mode...');
-    try {
-        execSync('rollup -c rollup.config.js --watch', {
-            stdio: 'inherit',
-            env: {
-                ...process.env,
-                KWC_TAG_MAPPING: JSON.stringify(tagMapping)
-            }
-        });
-    } catch (e) {
-        // Watch mode interrupted
+    console.log('\nStarting Watch Mode for all components...');
+    const processes = [];
+
+    // Clean up processes on exit
+    const cleanup = () => {
+        console.log('\nStopping all watch processes...');
+        processes.forEach(p => p.kill());
         process.exit(0);
+    };
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
+
+    // Concurrent watch for each component
+    if (componentFolders.length > 0) {
+        for (const folder of componentFolders) {
+            const filePath = join(componentsDir, folder, `${folder}.js`);
+            if (existsSync(filePath)) {
+                console.log(`Starting watch for: ${folder}`);
+                // Use spawn for parallel execution
+                try {
+                    const child = spawn('rollup', ['-c', 'rollup.config.js', '--watch'], {
+                        stdio: 'inherit',
+                        env: {
+                            ...process.env,
+                            TARGET_COMPONENT: folder,
+                            KWC_TAG_MAPPING: JSON.stringify(tagMapping)
+                        }
+                    });
+
+                    child.on('error', (err) => {
+                        console.error(`Failed to start watch for ${folder}:`, err);
+                    });
+
+                    processes.push(child);
+                } catch (err) {
+                    console.error(`Error starting watch process for ${folder}:`, err);
+                }
+            } else {
+                console.warn(`Skipping ${folder}: entry file not found.`);
+            }
+        }
     }
 } else if (componentFolders.length > 0) {
     for (const folder of componentFolders) {
@@ -61,15 +88,6 @@ if (isWatch) {
             } catch (e) {
                 console.error(`Failed to build ${folder}`);
                 process.exit(1);
-            }
-            if (isWin && copyIconsFull) {
-                const src = join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
-                const dest = folder === 'main'
-                    ? join('dist', 'assets', 'icons')
-                    : join('dist', 'kwc', folder, 'assets', 'icons');
-                try {
-                    execSync(`robocopy "${src}" "${dest}" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
-                } catch (_e) { String(_e); }
             }
         } else {
             console.warn(`Skipping ${folder}: entry file not found.`);
@@ -91,13 +109,6 @@ if (isWatch) {
         } catch (e) {
             console.error('Failed to build main.js');
             process.exit(1);
-        }
-        if (isWin && copyIconsFull) {
-            const src = join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
-            const dest = join('dist', 'assets', 'icons');
-            try {
-                execSync(`robocopy "${src}" "${dest}" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
-            } catch (_e) { String(_e); }
         }
     }
 }

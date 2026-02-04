@@ -225,12 +225,6 @@ export default (args) => {
                     !isDev && process.env.TARGET_COMPONENT && {
                         src: 'app/kwc/static/lang',
                         dest: `dist/kwc/${process.env.TARGET_COMPONENT}`
-                    },
-                    !isDev && process.env.TARGET_COMPONENT && !useRobocopy && {
-                        src: 'node_modules/@kdcloudjs/shoelace/dist/assets/icons',
-                        dest: process.env.TARGET_COMPONENT === 'main'
-                            ? 'dist/assets'
-                            : `dist/kwc/${process.env.TARGET_COMPONENT}/assets`
                     }
                 ].filter(Boolean)
             }),
