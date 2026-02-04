@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 
 // ========================== 插件定义 ==========================
 // 自定义插件：处理 lang 目录下的 json 文件
@@ -41,36 +40,6 @@ const copyLangPlugin = () => {
     }
   };
 };
-
-const copyIconPlugin = () => {
-  return {
-    name: 'copy-icons',
-    writeBundle() {
-      const targetComponent = process.env.TARGET_COMPONENT;
-      if (!targetComponent) { return; }
-
-      const outDir = path.resolve('dist', 'kwc', targetComponent);
-      const iconDir = path.join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
-
-      if (fs.existsSync(iconDir)) {
-        console.log(`Copying icons for ${targetComponent}...`);
-        if (process.platform === 'win32') {
-          try {
-            execSync(`robocopy "${iconDir}" "${outDir}/assets/icons" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
-          } catch (e) {
-            if (e.status > 7) {
-              throw e;
-            }
-          }
-        } else {
-          fs.cpSync(iconDir, path.join(outDir, 'assets/icons'), { recursive: true });
-        }
-      } else {
-        console.warn(`Warning: Icons source directory not found at ${iconDir}`);
-      }
-    }
-  };
-}
 
 export default defineConfig(({ command, mode }: ConfigEnv) => {
   const isBuild = command === 'build';
@@ -133,8 +102,7 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
     plugins: [
       react(),
       cssInjectedByJsPlugin(),
-      copyLangPlugin(),
-      copyIconPlugin()
+      copyLangPlugin()
     ],
     build: {
       chunkSizeWarningLimit: 1024,
