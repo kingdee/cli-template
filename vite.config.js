@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import path from 'path';
 import fs from 'fs';
-import { execSync } from 'child_process';
 // ========================== 插件定义 ==========================
 
 // 自定义插件：处理 lang 目录下的 json 文件
@@ -42,33 +41,23 @@ const copyLangPlugin = () => {
     };
 };
 
-const copyIconPlugin = () => {
+// 自定义插件：处理 shoelace 主题文件的 Dev Server 支持
+const serveShoelaceThemePlugin = () => {
     return {
-        name: 'copy-icon',
-        writeBundle() {
-            const targetComponent = process.env.TARGET_COMPONENT;
-            if (!targetComponent) { return; }
-
-            const outDir = path.resolve('dist', 'kwc', targetComponent);
-            const iconDir = path.join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
-
-            if (fs.existsSync(iconDir)) {
-                console.log(`Copying icons for ${targetComponent}...`);
-                if (process.platform === 'win32') {
-                    try {
-                        const src = path.join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
-                        execSync(`robocopy "${iconDir}" "${outDir}/assets/icons" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
-                    } catch (e) {
-                        if (e.status > 7) {
-                            throw e;
-                        }
+        name: 'serve-shoelace-theme',
+        apply: 'serve',
+        configureServer(server) {
+            server.middlewares.use((req, res, next) => {
+                if (req.url === '/themes/light.css') {
+                    const cssPath = path.resolve('node_modules/@kdcloudjs/shoelace/dist/themes/light.css');
+                    if (fs.existsSync(cssPath)) {
+                        res.setHeader('Content-Type', 'text/css');
+                        res.end(fs.readFileSync(cssPath));
+                        return;
                     }
-                } else {
-                    fs.cpSync(iconDir, path.join(outDir, 'assets/icons'), { recursive: true });
                 }
-            } else {
-                console.warn(`Warning: Icons source directory not found at ${iconDir}`);
-            }
+                next();
+            });
         }
     };
 };
@@ -135,7 +124,7 @@ export default defineConfig(({ command, mode }) => {
             react(),
             cssInjectedByJsPlugin(),
             copyLangPlugin(),
-            copyIconPlugin()
+            !isBuild && serveShoelaceThemePlugin()
         ],
         build: {
             chunkSizeWarningLimit: 1024,
