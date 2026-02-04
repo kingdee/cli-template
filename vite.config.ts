@@ -4,7 +4,6 @@ import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import fs from 'fs';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
-import { execSync } from 'child_process';
 
 // 自定义插件：处理 lang 目录下的 json 文件
 const copyLangPlugin = () => {
@@ -42,32 +41,23 @@ const copyLangPlugin = () => {
     };
 };
 
-const copyIconPlugin = () => {
+// 自定义插件：处理 shoelace 主题文件的 Dev Server 支持
+const serveShoelaceThemePlugin = () => {
   return {
-    name: 'copy-icons',
-    writeBundle() {
-      const targetComponent = process.env.TARGET_COMPONENT;
-      if (!targetComponent) { return; }
-
-      const outDir = path.resolve('dist', 'kwc', targetComponent);
-      const iconDir = path.join('node_modules', '@kdcloudjs', 'shoelace', 'dist', 'assets', 'icons');
-
-      if (fs.existsSync(iconDir)) {
-        console.log(`Copying icons for ${targetComponent}...`);
-        if (process.platform === 'win32') {
-          try {
-            execSync(`robocopy "${iconDir}" "${outDir}/assets/icons" *.svg /MIR /MT:32 /R:0 /W:0 /NFL /NDL /NP`, { stdio: 'inherit' });
-          } catch (e) {
-            if (e.status > 7) {
-              throw e;
-            }
+    name: 'serve-shoelace-theme',
+    apply: 'serve',
+    configureServer(server: any) {
+      server.middlewares.use((req: any, res: any, next: any) => {
+        if (req.url === '/themes/light.css') {
+          const cssPath = path.resolve('node_modules/@kdcloudjs/shoelace/dist/themes/light.css');
+          if (fs.existsSync(cssPath)) {
+            res.setHeader('Content-Type', 'text/css');
+            res.end(fs.readFileSync(cssPath));
+            return;
           }
-        } else {
-          fs.cpSync(iconDir, path.join(outDir, 'assets/icons'), { recursive: true });
         }
-      } else {
-        console.warn(`Warning: Icons source directory not found at ${iconDir}`);
-      }
+        next();
+      });
     }
   };
 };
@@ -104,7 +94,7 @@ export default defineConfig(({ command, mode }) => {
       }),
       cssInjectedByJsPlugin(),
       copyLangPlugin(),
-      copyIconPlugin()
+      !isBuild && serveShoelaceThemePlugin()
     ].filter(Boolean),
 
     build: {
