@@ -48,8 +48,10 @@ if (isWatch) {
                 console.log(`Starting watch for: ${folder}`);
                 // Use spawn for parallel execution
                 try {
-                    const child = spawn('rollup', ['-c', 'rollup.config.js', '--watch'], {
+                    const rollupCmd = process.platform === 'win32' ? 'rollup.cmd' : 'rollup';
+                    const child = spawn(rollupCmd, ['-c', 'rollup.config.js', '--watch'], {
                         stdio: 'inherit',
+                        shell: process.platform === 'win32', // Only use shell on Windows if needed, or rely on .cmd extension
                         env: {
                             ...process.env,
                             TARGET_COMPONENT: folder,
