@@ -73,6 +73,50 @@ const getComponentEntries = () => {
     return entries;
 };
 
+/**
+ * 生产构建注入 setBasePath
+ */
+function injectBasePath() {
+    return {
+        name: 'inject-base-path',
+        transform(code, id) {
+            const normalizedId = id.split(path.sep).join('/');
+            // 匹配 app/kwc/name/name.js 格式的入口文件
+            if (/\/app\/kwc\/([^/]+)\/\1\.js$/.test(normalizedId)) {
+                // 使用 AST 解析判断是否已引入 setBasePath，避免被注释误导
+                try {
+                    const ast = this.parse(code);
+                    const hasSetBasePath = ast.body.some(node =>
+                        node.type === 'ImportDeclaration' &&
+                        node.source.value.includes('@kdcloudjs/shoelace/dist/utilities/base-path.js') &&
+                        node.specifiers.some(s => s.imported && s.imported.name === 'setBasePath')
+                    );
+                    if (hasSetBasePath) return null;
+                } catch (e) {
+                    // 解析失败时降级检查（忽略以 // 开头的行）
+                    const lines = code.split('\n');
+                    const hasImport = lines.some(line =>
+                        !line.trim().startsWith('//') &&
+                        line.includes('setBasePath') &&
+                        line.includes('@kdcloudjs/shoelace/dist/utilities/base-path.js')
+                    );
+                    if (hasImport) return null;
+                }
+
+                const injection = `import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js';
+const onlineCdnPath = window.location.origin + window.location.pathname.slice(0, window.location.pathname.lastIndexOf('/') + 1);
+setBasePath(\`\${onlineCdnPath}/public/kwc\`);
+`;
+                return {
+                    code: injection + code,
+                    map: { mappings: '' } // 提供基础的 source map 消除警告
+                };
+            }
+            return null;
+        }
+    };
+}
+
 // 🔑 新增 watchCss 插件：保证 .css 文件修改时 rollup 会重新编译
 function watchCss() {
     return {
@@ -203,6 +247,8 @@ export default (args) => {
             }),
             // 确保在 kwc() 之前加上 watchCss
             (isDev || isDebugBuild) && watchCss(),
+            // 生产模式注入 BasePath
+            !isDev && injectBasePath(),
             kwcWrapper({ rootDir: 'app' }),
             replaceTagNames(),
             resolve(),
