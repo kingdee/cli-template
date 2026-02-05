@@ -157,7 +157,7 @@ function setupStaticMiddleware() {
 
       console.log(
         '[static]',
-        res.getHeader('Content-Type'),
+        // res.getHeader('Content-Type'),
         path.relative(DIST_KWC_DIR, filePath)
       );
     },
