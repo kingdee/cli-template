@@ -1,86 +1,130 @@
 /* eslint-disable no-console */
 import { build } from 'vite';
-import fs from 'fs';
 import path from 'path';
+import fs from 'fs';
+import chokidar from 'chokidar';
+import { generateEntries } from './entry-generator.js';
 
-const componentsDir = path.resolve('app/kwc');
-const distDir = path.resolve('dist');
-const tempEntryDir = path.resolve('temp-entry');
+const COMPONENTS_DIR = path.resolve(process.cwd(), 'app/kwc');
+const TEMP_ENTRY_DIR = path.resolve(process.cwd(), 'temp-entry');
 
-if (fs.existsSync(distDir)) {
-    console.log('Cleaning dist directory...');
-    fs.rmSync(distDir, { recursive: true, force: true });
-}
+// 解析参数
+const isWatch = process.argv.includes('--watch');
+const buildMode = isWatch ? 'development' : 'production';
 
-if (fs.existsSync(tempEntryDir)) {
-    fs.rmSync(tempEntryDir, { recursive: true, force: true });
-}
-fs.mkdirSync(tempEntryDir, { recursive: true });
+// 单个组件构建函数
+async function buildComponent(componentName, entryFile) {
+  const logPrefix = isWatch ? '[Rebuild] ' : '';
+  console.log(`${logPrefix}Building component: ${componentName}...`);
 
-// Get all component directories that contain a .ce.vue file
-const components = fs.readdirSync(componentsDir).filter(name => {
-    const dirPath = path.join(componentsDir, name);
-    if (!fs.statSync(dirPath).isDirectory()) {
-        return false;
+  process.env.TARGET_COMPONENT = componentName;
+  process.env.ENTRY_FILE = entryFile;
+
+  try {
+    await build({
+      configFile: path.resolve(process.cwd(), 'vite.config.js'),
+      mode: buildMode,
+      build: {
+        lib: {
+          entry: entryFile,
+          formats: ['es']
+        }
+      }
+    });
+    if (isWatch) {
+      console.log(`[Success] ${componentName} built.`);
     }
-    return fs.existsSync(path.join(dirPath, `${name}.ce.vue`));
-});
-
-console.log(`Found ${components.length} components: ${components.join(', ')}`);
-
-for (const component of components) {
-    console.log(`\nBuilding component: ${component}...`);
-
-    process.env.TARGET_COMPONENT = component;
-
-    const componentFile = path.join(componentsDir, component, `${component}.ce.vue`);
-    const relativePath = path.relative(tempEntryDir, componentFile).replace(/\\/g, '/');
-
-    
-
-    const entryContent = `
-import { defineCustomElement } from 'vue'
-import Component from '${relativePath}'
-import { setBasePath } from '@kdcloudjs/shoelace/dist/utilities/base-path.js'
-
-const baseUrl = window.location.origin + window.location.pathname.slice(0, window.location.pathname.lastIndexOf('/') + 1);
-setBasePath(baseUrl + 'public/kwc');
-
-const Element = defineCustomElement(Component)
-function register(name = '${component.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}') {
-  if (!customElements.get(name)) {
-    customElements.define(name, Element)
+  } catch (error) {
+    console.error(`[Error] Failed to build ${componentName}:`, error);
+    throw error;
   }
 }
-export default { Element, register }
-export { Element, register }
-`.trim();
 
-    const entryFile = path.join(tempEntryDir, `${component}.ts`);
-    fs.writeFileSync(entryFile, entryContent);
+async function run() {
+  console.log(`Starting build in ${buildMode} mode${isWatch ? ' (watching)' : ''}...`);
 
-    try {
-        await build({
-            configFile: 'vite.config.js',
-            mode: 'production',
-            build: {
-                lib: {
-                    entry: entryFile,
-                    formats: ['es']
-                }
-            }
-        });
+  // 1. 生成所有入口文件
+  const entryPoints = generateEntries(COMPONENTS_DIR, TEMP_ENTRY_DIR);
+  const components = Object.keys(entryPoints);
 
-        console.log(`✓ ${component} built successfully`);
-    } catch (e) {
-        console.error(`✗ Failed to build ${component}:`, e);
-        process.exit(1);
+  const cleanup = () => {
+    if (fs.existsSync(TEMP_ENTRY_DIR)) {
+      fs.rmSync(TEMP_ENTRY_DIR, { recursive: true, force: true });
     }
+  };
+
+  if (components.length === 0) {
+    console.log('No components found to build.');
+    if (!isWatch) {
+      cleanup();
+    }
+    return;
+  }
+
+  // 2. 执行全量构建（Watch 模式下作为初始构建）
+  for (const componentName of components) {
+    try {
+      await buildComponent(componentName, entryPoints[componentName]);
+    } catch (error) {
+      console.error(error);
+      if (!isWatch) {
+        cleanup();
+        process.exit(1);
+      }
+    }
+  }
+
+  if (!isWatch) {
+    // 非 Watch 模式：构建完成后清理临时目录并退出
+    cleanup();
+    console.log('All components built successfully!');
+    return;
+  }
+
+  // 3. Watch 模式：启动监听
+  console.log('Initial build complete. Watching for changes...');
+
+  const watcher = chokidar.watch(COMPONENTS_DIR, {
+    ignored: /(^|[/\\])\../, // 忽略点文件
+    persistent: true,
+    ignoreInitial: true
+  });
+
+  // 组件构建任务队列（简单的防抖映射）
+  const buildTasks = {};
+
+  const handleFileChange = (filePath) => {
+    // 解析组件名
+    const relativePath = path.relative(COMPONENTS_DIR, filePath);
+    const componentName = relativePath.split(path.sep)[0];
+
+    if (!componentName || !entryPoints[componentName]) {
+      return;
+    }
+
+    // 防抖处理
+    if (buildTasks[componentName]) {
+      clearTimeout(buildTasks[componentName]);
+    }
+
+    buildTasks[componentName] = setTimeout(() => {
+      buildComponent(componentName, entryPoints[componentName]).catch(() => {
+        // error already logged
+      });
+      delete buildTasks[componentName];
+    }, 300);
+  };
+
+  watcher
+    .on('add', handleFileChange)
+    .on('change', handleFileChange)
+    .on('unlink', handleFileChange);
+
+  // Handle process exit
+  process.on('SIGINT', () => {
+    cleanup();
+    process.exit();
+  });
 }
 
-// Cleanup temp entry directory
-if (fs.existsSync(tempEntryDir)) {
-    fs.rmSync(tempEntryDir, { recursive: true, force: true });
-}
-
-console.log('\nAll components built successfully!');
+run();
