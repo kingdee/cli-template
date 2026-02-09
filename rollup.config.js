@@ -151,8 +151,22 @@ function replaceTagNames() {
     return {
         name: 'replace-tag-names',
         resolveId(source) {
-            if (source.startsWith('kwc/')) {
-                const name = source.slice(4);
+            if (!source) return null;
+
+            // 兼容绝对路径：先转为相对路径
+            let relativePath = source;
+            if (path.isAbsolute(source)) {
+                relativePath = path.relative(process.cwd(), source);
+            }
+
+            // 统一路径分隔符为 /
+            const normalizedSource = relativePath.split(path.sep).join('/');
+            const prefix = 'app/kwc/';
+
+            if (normalizedSource.startsWith(prefix)) {
+                const name = normalizedSource.slice(prefix.length).split('/')[0];
+                console.log(name, 'name')
+                if (!name) return null;
                 const tagName = `kwc-${toKebab(name)}`;
                 if (values.includes(tagName)) {
                     const originalTag = keys.find(k => mapping[k] === tagName);
