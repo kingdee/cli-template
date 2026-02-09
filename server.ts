@@ -133,7 +133,7 @@ function setupStaticMiddleware() {
   }
 
   // 创建自定义静态中间件
-  const isvDir = ['kingdee', 'kdxk'].includes(isv) ? 'isv' : `isv/${isv}`;
+  const isvDir = ['kingdee', 'kdxk'].includes(isv) ? isv : `isv/${isv}`;
   const mountPath = `/${isvDir}/${moduleId}`;
 
   // 创建中间件实例
