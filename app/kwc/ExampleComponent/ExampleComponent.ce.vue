@@ -64,7 +64,6 @@
 import { ref } from 'vue';
 import '@kdcloudjs/shoelace/dist/components/button/button.js';
 import '@kdcloudjs/shoelace/dist/components/icon/icon.js';
-import '@kdcloudjs/shoelace/dist/themes/light.css';
 import logoUrl from './logo.png';
 
 const count = ref(0);
