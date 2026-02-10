@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
-import '@kdcloudjs/shoelace/dist/components/button/button.js';
-import '@kdcloudjs/shoelace/dist/components/icon/icon.js';
+import SlButton from '@kdcloudjs/shoelace/dist/react/button/index.js';
+import SlIcon from '@kdcloudjs/shoelace/dist/react/icon/index.js';
+import SlInput from '@kdcloudjs/shoelace/dist/react/input/index.js';
 import '@kdcloudjs/shoelace/dist/themes/light.css';
 import styles from './ExampleComponent.module.scss';
 import logoUrl from './logo.png';
 
 function ExampleComponent() {
     const [count, setCount] = useState(0);
+    const [value, setValue] = useState('');
 
     return (
         <div className={styles.container}>
+            <SlInput
+                style={{ display: 'none' }}
+                value={value}
+                onSlInput={event => setValue(event.target.value)}
+            />
             <div className={styles['bg-circle']}></div>
             <div className={styles['bg-circle-2']}></div>
             <div className={styles['bg-circle-3']}></div>
@@ -50,10 +57,10 @@ function ExampleComponent() {
             </svg>
 
             <div className={styles.card}>
-                <sl-button className={styles['custom-button']} size="large" pill onClick={() => setCount(count + 1)}>
-                    <sl-icon slot="prefix" name="plus-lg"></sl-icon>
+                <SlButton className={styles['custom-button']} size="large" pill onClick={() => setCount(count + 1)}>
+                    <SlIcon slot="prefix" name="plus-lg"></SlIcon>
                     <span className={styles['count-text']}>count is {count}</span>
-                </sl-button>
+                </SlButton>
                 <p>
                     Edit <code>app/kwc/ExampleComponent/ExampleComponent.jsx</code> to get started
                 </p>
