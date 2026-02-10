@@ -64,7 +64,6 @@
 import { ref } from 'vue';
 import '@kdcloudjs/shoelace/dist/components/button/button.js';
 import '@kdcloudjs/shoelace/dist/components/icon/icon.js';
-import '@kdcloudjs/shoelace/dist/themes/light.css';
 import logoUrl from './logo.png';
 
 const count = ref(0);
@@ -89,6 +88,14 @@ const count = ref(0);
   align-items: center;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
+  font-size: 16px;
+  p {
+    margin: 1em 0;
+    code {
+      font-size: 0.8em;
+    }
+  }
 }
 
 .bg-circle {
@@ -149,7 +156,7 @@ const count = ref(0);
 }
 
 .logo {
-  height: 12em;
+  height: 15em;
   padding: 1.5em;
   will-change: filter, transform;
   transition: filter 300ms;
