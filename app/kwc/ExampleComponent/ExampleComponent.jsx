@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import SlButton from '@kdcloudjs/shoelace/dist/react/button/index.js';
 import SlIcon from '@kdcloudjs/shoelace/dist/react/icon/index.js';
 import SlInput from '@kdcloudjs/shoelace/dist/react/input/index.js';
-import '@kdcloudjs/shoelace/dist/themes/light.css';
 import styles from './ExampleComponent.module.scss';
 import logoUrl from './logo.png';
 
