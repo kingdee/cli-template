@@ -15,6 +15,16 @@
   align-items: center;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
+  font-size: 16px;
+
+  p {
+    margin: 1em 0;
+
+    code {
+      font-size: 0.8em;
+    }
+  }
 }
 
 .bg-circle {
@@ -75,7 +85,7 @@
 }
 
 .logo {
-  height: 12em;
+  height: 15em;
   padding: 1.5em;
   will-change: filter, transform;
   transition: filter 300ms;
