@@ -44,13 +44,14 @@ function loadKdConfig() {
 
         // 解析 JSON
         const parsedConfig = JSON.parse(raw);
+        parsedConfig.appId = parsedConfig.app;
 
         // 验证必要字段
-        if (parsedConfig.isv && parsedConfig.moduleId) {
+        if (parsedConfig.isv && parsedConfig.appId) {
             kdConfig = parsedConfig;
-            console.log('[kd-config] Loaded:', { isv: parsedConfig.isv, moduleId: parsedConfig.moduleId });
+            console.log('[kd-config] Loaded:', { isv: parsedConfig.isv, app: parsedConfig.appId });
         } else {
-            console.warn('[kd-config] Missing required fields (isv/moduleId)');
+            console.warn('[kd-config] Missing required fields (isv/app)');
             kdConfig = parsedConfig;
         }
     } catch (e) {
@@ -113,9 +114,9 @@ function setupStaticMiddleware() {
         staticRoutePath = null;
     }
 
-    const { isv, moduleId } = kdConfig;
-    if (!isv || !moduleId) {
-        console.warn('[kd-server] kdConfig missing isv/moduleId, static route not mounted');
+    const { isv, appId } = kdConfig;
+    if (!isv || !appId) {
+        console.warn('[kd-server] kdConfig missing isv/app, static route not mounted');
         return;
     }
 
@@ -126,7 +127,7 @@ function setupStaticMiddleware() {
 
     // 创建自定义静态中间件
     const isvDir = ['kingdee', 'kdxk'].includes(isv) ? isv : `isv/${isv}`;
-    const mountPath = `/${isvDir}/${moduleId}`;
+    const mountPath = `/${isvDir}/${appId}`;
 
     // 创建中间件实例
     const staticMiddleware = express.static(DIST_KWC_DIR, {
@@ -212,8 +213,8 @@ app.listen(PORT, () => {
     console.log(`📁 Static files root: ${DIST_KWC_DIR}`);
 
     // 显示当前配置信息
-    if (kdConfig.isv && kdConfig.moduleId) {
-        const staticUrl = `http://localhost:${PORT}/isv/${kdConfig.isv}/${kdConfig.moduleId}`;
+    if (kdConfig.isv && kdConfig.appId) {
+        const staticUrl = `http://localhost:${PORT}/isv/${kdConfig.isv}/${kdConfig.appId}`;
         console.log(`🔗 Static files URL: ${staticUrl}`);
     } else {
         console.log('⚠️  Static files not mounted, please check .kd/config.json');
