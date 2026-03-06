@@ -12,3 +12,6 @@ const ExampleElement = defineCustomElement(ExampleComponent);
 if (!customElements.get('example-component')) {
   customElements.define('example-component', ExampleElement);
 }
+
+// Mount example-component to body
+document.body.appendChild(new ExampleElement());
