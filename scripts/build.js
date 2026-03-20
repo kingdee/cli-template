@@ -1,4 +1,4 @@
-import { readdirSync, existsSync, rmSync } from 'fs';
+import { readdirSync, existsSync, rmSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from 'fs';
 import { join } from 'path';
 import { execSync, spawn } from 'child_process';
 
@@ -9,6 +9,88 @@ const isWatch = args.includes('--watch');
 if (existsSync('dist')) {
     console.log('Cleaning dist directory...');
     rmSync('dist', { recursive: true, force: true });
+}
+
+/**
+ * Recursively copy a directory (compatible with Node.js < 16.7)
+ */
+function copyDir(src, dest) {
+    mkdirSync(dest, { recursive: true });
+    for (const entry of readdirSync(src, { withFileTypes: true })) {
+        const srcPath = join(src, entry.name);
+        const destPath = join(dest, entry.name);
+        if (entry.isDirectory()) {
+            copyDir(srcPath, destPath);
+        } else {
+            copyFileSync(srcPath, destPath);
+        }
+    }
+}
+
+/**
+ * Copy shoelace resources to dist/shoelace
+ * 1. Copy assets folder
+ * 2. Merge theme CSS files into shoelace.css
+ * 3. Generate version.json from package.json
+ */
+function copyShoelaceResources() {
+    const shoelacePath = 'node_modules/@kdcloudjs/shoelace';
+    const shoelaceDistPath = join(shoelacePath, 'dist');
+    const outputDir = 'dist/shoelace';
+
+    // Check if shoelace dist exists
+    if (!existsSync(shoelaceDistPath)) {
+        console.warn('Shoelace dist directory not found, skipping shoelace resource copy.');
+        return;
+    }
+
+    // Create output directory
+    if (!existsSync(outputDir)) {
+        mkdirSync(outputDir, { recursive: true });
+    }
+
+    console.log('\nProcessing Shoelace resources...');
+
+    // 1. Copy assets folder
+    const assetsPath = join(shoelaceDistPath, 'assets');
+    if (existsSync(assetsPath)) {
+        copyDir(assetsPath, join(outputDir, 'assets'));
+        console.log('  - Copied assets folder');
+    } else {
+        console.warn('  - Assets folder not found, skipping.');
+    }
+
+    // 2. Merge theme CSS files
+    const themesPath = join(shoelaceDistPath, 'themes');
+    if (existsSync(themesPath)) {
+        const cssFiles = readdirSync(themesPath).filter(file => file.endsWith('.css'));
+        if (cssFiles.length > 0) {
+            let mergedCss = '';
+            cssFiles.forEach(file => {
+                const cssContent = readFileSync(join(themesPath, file), 'utf-8');
+                mergedCss += `/* ${file} */\n${cssContent}\n\n`;
+            });
+            writeFileSync(join(outputDir, 'shoelace.css'), mergedCss);
+            console.log(`  - Merged ${cssFiles.length} theme CSS files into shoelace.css`);
+        } else {
+            console.warn('  - No CSS files found in themes folder.');
+        }
+    } else {
+        console.warn('  - Themes folder not found, skipping CSS merge.');
+    }
+
+    // 3. Generate version.json from package.json
+    const packageJsonPath = join(shoelacePath, 'package.json');
+    if (existsSync(packageJsonPath)) {
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+        const versionJson = { version: packageJson.version };
+        writeFileSync(join(outputDir, 'version.json'), JSON.stringify(versionJson, null, 2));
+        console.log(`  - Generated version.json (version: ${packageJson.version})`);
+    } else {
+        console.warn('  - Shoelace package.json not found, skipping version.json generation.');
+    }
+
+    console.log('Shoelace resources processed successfully!\n');
 }
 
 const componentsDir = 'app/kwc';
@@ -113,4 +195,9 @@ if (isWatch) {
             process.exit(1);
         }
     }
+}
+
+// Copy shoelace resources after build (only in non-watch mode)
+if (!isWatch) {
+    copyShoelaceResources();
 }

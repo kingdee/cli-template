@@ -283,7 +283,7 @@ export default (args) => {
                     isDev && { src: 'app/kwc/logo.png', dest: 'dist' },
                     isDev && { src: 'node_modules/@kdcloudjs/shoelace/dist/themes/light.css', dest: 'dist/themes' },
                     !isDev && process.env.TARGET_COMPONENT && {
-                        src: 'app/kwc/static/lang',
+                        src: 'app/kwc/static/*',
                         dest: `dist/kwc/${process.env.TARGET_COMPONENT}`
                     }
                 ].filter(Boolean)
