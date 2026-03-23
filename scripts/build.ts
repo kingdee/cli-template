@@ -60,7 +60,6 @@ function processShoelaceAssets() {
     const assetsDest = path.join(outputDir, 'assets');
     if (fs.existsSync(assetsSource)) {
         copyDirectory(assetsSource, assetsDest);
-        console.log(`[shoelace] Copied assets to ${assetsDest}`);
     }
 
     // 2. 单独输出各主题 CSS 文件到 css 目录（添加 shoelace- 前缀）
@@ -75,7 +74,6 @@ function processShoelaceAssets() {
                 const destFileName = `shoelace-${themeFile}`;
                 const destPath = path.join(cssOutputDir, destFileName);
                 fs.copyFileSync(srcPath, destPath);
-                console.log(`[shoelace] Copied ${themeFile} to ${destFileName}`);
             }
         }
 
@@ -84,7 +82,6 @@ function processShoelaceAssets() {
         if (fs.existsSync(lightCssPath)) {
             const compatPath = path.join(cssOutputDir, 'shoelace.css');
             fs.copyFileSync(lightCssPath, compatPath);
-            console.log(`[shoelace] Created shoelace.css (copy of shoelace-light.css) for compatibility`);
         }
     }
 
@@ -95,7 +92,6 @@ function processShoelaceAssets() {
         const versionJson = { version: shoelacePkg.version };
         const versionOutputPath = path.join(outputDir, 'version.json');
         fs.writeFileSync(versionOutputPath, JSON.stringify(versionJson, null, 2));
-        console.log(`[shoelace] Generated version.json with version: ${shoelacePkg.version}`);
     }
 
     console.log('[shoelace] All shoelace resources processed successfully!');
