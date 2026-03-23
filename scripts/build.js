@@ -55,28 +55,39 @@ function copyShoelaceResources() {
     const assetsPath = join(shoelaceDistPath, 'assets');
     if (existsSync(assetsPath)) {
         copyDir(assetsPath, join(outputDir, 'assets'));
-        console.log('  - Copied assets folder');
     } else {
         console.warn('  - Assets folder not found, skipping.');
     }
 
-    // 2. Merge theme CSS files
+    // 2. 单独输出各主题 CSS 文件到 css 目录（添加 shoelace- 前缀）
     const themesPath = join(shoelaceDistPath, 'themes');
+    const cssOutputDir = join(outputDir, 'css');
     if (existsSync(themesPath)) {
-        const cssFiles = readdirSync(themesPath).filter(file => file.endsWith('.css'));
-        if (cssFiles.length > 0) {
-            let mergedCss = '';
-            cssFiles.forEach(file => {
-                const cssContent = readFileSync(join(themesPath, file), 'utf-8');
-                mergedCss += `/* ${file} */\n${cssContent}\n\n`;
-            });
-            writeFileSync(join(outputDir, 'shoelace.css'), mergedCss);
-            console.log(`  - Merged ${cssFiles.length} theme CSS files into shoelace.css`);
-        } else {
-            console.warn('  - No CSS files found in themes folder.');
+        // 确保 css 输出目录存在
+        if (!existsSync(cssOutputDir)) {
+            mkdirSync(cssOutputDir, { recursive: true });
+        }
+
+        // 只处理 light.css 和 dark.css
+        const targetThemes = ['light.css', 'dark.css'];
+
+        for (const themeFile of targetThemes) {
+            const srcPath = join(themesPath, themeFile);
+            if (existsSync(srcPath)) {
+                const destFileName = `shoelace-${themeFile}`;
+                const destPath = join(cssOutputDir, destFileName);
+                copyFileSync(srcPath, destPath);
+            }
+        }
+
+        // 复制 shoelace-light.css 为 shoelace.css（兼容现有用户）
+        const lightCssPath = join(cssOutputDir, 'shoelace-light.css');
+        if (existsSync(lightCssPath)) {
+            const compatPath = join(cssOutputDir, 'shoelace.css');
+            copyFileSync(lightCssPath, compatPath);
         }
     } else {
-        console.warn('  - Themes folder not found, skipping CSS merge.');
+        console.warn('  - Themes folder not found, skipping CSS copy.');
     }
 
     // 3. Generate version.json from package.json
@@ -85,7 +96,6 @@ function copyShoelaceResources() {
         const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
         const versionJson = { version: packageJson.version };
         writeFileSync(join(outputDir, 'version.json'), JSON.stringify(versionJson, null, 2));
-        console.log(`  - Generated version.json (version: ${packageJson.version})`);
     } else {
         console.warn('  - Shoelace package.json not found, skipping version.json generation.');
     }
