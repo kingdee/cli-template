@@ -11,6 +11,96 @@ const TEMP_ENTRY_DIR = path.resolve(process.cwd(), 'temp-entry');
 const isWatch = process.argv.includes('--watch');
 const buildMode = isWatch ? 'development' : 'production';
 
+/**
+ * 递归复制目录（兼容 Node.js 10+）
+ */
+function copyDirectory(src: string, dest: string) {
+    if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+    }
+
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    for (const entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+
+        if (entry.isDirectory()) {
+            copyDirectory(srcPath, destPath);
+        } else {
+            fs.copyFileSync(srcPath, destPath);
+        }
+    }
+}
+
+/**
+ * 处理 shoelace 资源：assets拷贝、CSS单独输出、version.json生成
+ * 所有资源统一输出到 dist/shoelace/ 目录
+ */
+function processShoelaceAssets() {
+    console.log('[shoelace] Processing shoelace assets...');
+
+    const shoelaceRoot = path.resolve(process.cwd(), 'node_modules/@kdcloudjs/shoelace');
+    const shoelaceDist = path.join(shoelaceRoot, 'dist');
+    const outputDir = path.resolve(process.cwd(), 'dist/shoelace');
+    const cssOutputDir = path.join(outputDir, 'css');
+
+    // 检查 shoelace 是否存在
+    if (!fs.existsSync(shoelaceDist)) {
+        console.warn('[shoelace] @kdcloudjs/shoelace/dist not found, skipping...');
+        return;
+    }
+
+    // 确保输出目录存在
+    if (!fs.existsSync(cssOutputDir)) {
+        fs.mkdirSync(cssOutputDir, { recursive: true });
+    }
+
+    // 1. 拷贝 assets 目录
+    const assetsSource = path.join(shoelaceDist, 'assets');
+    const assetsDest = path.join(outputDir, 'assets');
+    if (fs.existsSync(assetsSource)) {
+        copyDirectory(assetsSource, assetsDest);
+        console.log(`[shoelace] Copied assets to ${assetsDest}`);
+    }
+
+    // 2. 单独输出各主题 CSS 文件到 css 目录（添加 shoelace- 前缀）
+    const themesDir = path.join(shoelaceDist, 'themes');
+    if (fs.existsSync(themesDir)) {
+        // 只处理 light.css 和 dark.css
+        const targetThemes = ['light.css', 'dark.css'];
+        
+        for (const themeFile of targetThemes) {
+            const srcPath = path.join(themesDir, themeFile);
+            if (fs.existsSync(srcPath)) {
+                const destFileName = `shoelace-${themeFile}`;
+                const destPath = path.join(cssOutputDir, destFileName);
+                fs.copyFileSync(srcPath, destPath);
+                console.log(`[shoelace] Copied ${themeFile} to ${destFileName}`);
+            }
+        }
+
+        // 复制 shoelace-light.css 为 shoelace.css（兼容现有用户）
+        const lightCssPath = path.join(cssOutputDir, 'shoelace-light.css');
+        if (fs.existsSync(lightCssPath)) {
+            const compatPath = path.join(cssOutputDir, 'shoelace.css');
+            fs.copyFileSync(lightCssPath, compatPath);
+            console.log(`[shoelace] Created shoelace.css (copy of shoelace-light.css) for compatibility`);
+        }
+    }
+
+    // 3. 读取 shoelace 的 version 并生成 version.json
+    const shoelacePkgPath = path.join(shoelaceRoot, 'package.json');
+    if (fs.existsSync(shoelacePkgPath)) {
+        const shoelacePkg = JSON.parse(fs.readFileSync(shoelacePkgPath, 'utf-8'));
+        const versionJson = { version: shoelacePkg.version };
+        const versionOutputPath = path.join(outputDir, 'version.json');
+        fs.writeFileSync(versionOutputPath, JSON.stringify(versionJson, null, 2));
+        console.log(`[shoelace] Generated version.json with version: ${shoelacePkg.version}`);
+    }
+
+    console.log('[shoelace] All shoelace resources processed successfully!');
+}
+
 // 单个组件构建函数
 async function buildComponent(componentName: string, entryFile: string) {
     const logPrefix = isWatch ? '[Rebuild] ' : '';
@@ -68,7 +158,8 @@ async function run() {
     }
 
     if (!isWatch) {
-        // 非 Watch 模式：构建完成后清理临时目录并退出
+        // 非 Watch 模式：处理 shoelace 资源，然后清理临时目录并退出
+        processShoelaceAssets();
         cleanup();
         console.log('All components built successfully!');
         return;
