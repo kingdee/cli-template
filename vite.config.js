@@ -5,35 +5,54 @@ import path from 'path';
 import fs from 'fs';
 // ========================== 插件定义 ==========================
 
-// 自定义插件：处理 lang 目录下的 json 文件
-const copyLangPlugin = () => {
+// 自定义插件：处理 static 目录下的所有文件
+const copyStaticPlugin = () => {
+    const copyDirRecursive = (src, dest) => {
+        if (!fs.existsSync(src)) return;
+
+        if (!fs.existsSync(dest)) {
+            fs.mkdirSync(dest, { recursive: true });
+        }
+
+        fs.readdirSync(src, { withFileTypes: true }).forEach(entry => {
+            const srcPath = path.join(src, entry.name);
+            const destPath = path.join(dest, entry.name);
+
+            if (entry.isDirectory()) {
+                copyDirRecursive(srcPath, destPath);
+            } else {
+                fs.copyFileSync(srcPath, destPath);
+                console.log(`[copy-static] Copied ${entry.name} to ${destPath}`);
+            }
+        });
+    };
+
     return {
-        name: 'copy-lang-files',
+        name: 'copy-static-files',
         writeBundle() {
             const targetComponent = process.env.TARGET_COMPONENT;
-            if (!targetComponent) {return;}
+            if (!targetComponent) { return; }
 
             const outDir = path.resolve('dist', 'kwc', targetComponent);
-            const langDir = path.resolve('app', 'kwc', 'static', 'lang');
+            const staticDir = path.resolve('app', 'kwc', 'static');
 
-            if (fs.existsSync(langDir)) {
-                const destDir = path.join(outDir, 'lang');
-                if (!fs.existsSync(destDir)) {
-                    fs.mkdirSync(destDir, { recursive: true });
-                }
-
-                fs.readdirSync(langDir).forEach(file => {
-                    if (file.endsWith('.json')) {
-                        fs.copyFileSync(path.join(langDir, file), path.join(destDir, file));
-                        console.log(`[copy-lang] Copied ${file} to ${destDir}`);
-                    }
-                });
+            if (fs.existsSync(staticDir)) {
+                copyDirRecursive(staticDir, outDir);
             }
         },
         configureServer(server) {
+            const staticDir = path.resolve('app', 'kwc', 'static');
             server.middlewares.use((req, res, next) => {
-                if (req.url.startsWith('/lang/') && req.url.endsWith('.json')) {
-                    req.url = req.url.replace('/lang/', '/static/lang/');
+                // 动态匹配 static 目录下的子目录，如 /lang/xxx -> /static/lang/xxx
+                if (fs.existsSync(staticDir)) {
+                    const entries = fs.readdirSync(staticDir, { withFileTypes: true });
+                    for (const entry of entries) {
+                        const prefix = `/${entry.name}/`;
+                        if (req.url.startsWith(prefix)) {
+                            req.url = `/static${req.url}`;
+                            break;
+                        }
+                    }
                 }
                 next();
             });
@@ -48,8 +67,11 @@ const serveShoelaceThemePlugin = () => {
         apply: 'serve',
         configureServer(server) {
             server.middlewares.use((req, res, next) => {
-                if (req.url === '/themes/light.css') {
-                    const cssPath = path.resolve('node_modules/@kdcloudjs/shoelace/dist/themes/light.css');
+                // 匹配 /themes/*.css 路径，支持 light、dark、nova 等所有主题
+                const themeMatch = req.url?.match(/^\/themes\/([^/]+\.css)$/);
+                if (themeMatch) {
+                    const themeName = themeMatch[1];
+                    const cssPath = path.resolve(`node_modules/@kdcloudjs/shoelace/dist/themes/${themeName}`);
                     if (fs.existsSync(cssPath)) {
                         res.setHeader('Content-Type', 'text/css');
                         res.end(fs.readFileSync(cssPath));
@@ -123,7 +145,7 @@ export default defineConfig(({ command, mode }) => {
         plugins: [
             react(),
             cssInjectedByJsPlugin(),
-            copyLangPlugin(),
+            copyStaticPlugin(),
             !isBuild && serveShoelaceThemePlugin()
         ],
         build: {
