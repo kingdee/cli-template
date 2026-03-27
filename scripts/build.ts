@@ -1,210 +1,131 @@
-import { build } from 'vite';
-import * as path from 'path';
-import * as fs from 'fs';
-import chokidar from 'chokidar';
-import { generateEntries } from './entry-generator';
+import { execSync } from 'child_process';
+import { existsSync, mkdirSync, readdirSync, statSync, copyFileSync, rmSync } from 'fs';
+import { join, basename } from 'path';
+import minimist from 'minimist';
+import pc from 'picocolors';
 
-const COMPONENTS_DIR = path.resolve(process.cwd(), 'app/kwc');
-const TEMP_ENTRY_DIR = path.resolve(process.cwd(), 'temp-entry');
+interface ParsedArgs {
+    _: string[];
+    type?: string;
+    e?: string;
+    env?: string;
+    'target-env'?: string;
+}
 
-// 解析参数
-const isWatch = process.argv.includes('--watch');
-const buildMode = isWatch ? 'development' : 'production';
+const argv: ParsedArgs = minimist(process.argv.slice(2), {
+    alias: { e: ['env', 'target-env'] }
+});
+// 优先从 npm config 读取 type（支持 npm run build --type=frontend）
+// 其次从命令行参数读取（支持 npm run build -- --type frontend）
+const type: string | undefined = process.env.npm_config_type || argv.type;
+const components: string[] = argv._;  // 位置参数（组件名）
+// 支持 --env=dev 或 --target-env=dev（npm run 时使用）或 -e dev（直接调用时使用）
+const env: string | undefined = process.env.npm_config_env || process.env.npm_config_target_env || argv.e;
 
 /**
- * 递归复制目录（兼容 Node.js 10+）
+ * 清理 dist 目录（全量构建时使用）
  */
-function copyDirectory(src: string, dest: string) {
-    if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest, { recursive: true });
-    }
-
-    const entries = fs.readdirSync(src, { withFileTypes: true });
-    for (const entry of entries) {
-        const srcPath = path.join(src, entry.name);
-        const destPath = path.join(dest, entry.name);
-
-        if (entry.isDirectory()) {
-            copyDirectory(srcPath, destPath);
-        } else {
-            fs.copyFileSync(srcPath, destPath);
-        }
+function cleanDist(): void {
+    if (existsSync('dist')) {
+        console.log('Cleaning dist directory...');
+        rmSync('dist', { recursive: true, force: true });
     }
 }
 
-/**
- * 处理 shoelace 资源：assets拷贝、CSS单独输出、version.json生成
- * 所有资源统一输出到 dist/shoelace/ 目录
- */
-function processShoelaceAssets() {
-    console.log('[shoelace] Processing shoelace assets...');
-
-    const shoelaceRoot = path.resolve(process.cwd(), 'node_modules/@kdcloudjs/shoelace');
-    const shoelaceDist = path.join(shoelaceRoot, 'dist');
-    const outputDir = path.resolve(process.cwd(), 'dist/shoelace');
-    const cssOutputDir = path.join(outputDir, 'css');
-
-    // 检查 shoelace 是否存在
-    if (!fs.existsSync(shoelaceDist)) {
-        console.warn('[shoelace] @kdcloudjs/shoelace/dist not found, skipping...');
-        return;
-    }
-
-    // 确保输出目录存在
-    if (!fs.existsSync(cssOutputDir)) {
-        fs.mkdirSync(cssOutputDir, { recursive: true });
-    }
-
-    // 1. 拷贝 assets 目录
-    const assetsSource = path.join(shoelaceDist, 'assets');
-    const assetsDest = path.join(outputDir, 'assets');
-    if (fs.existsSync(assetsSource)) {
-        copyDirectory(assetsSource, assetsDest);
-    }
-
-    // 2. 单独输出各主题 CSS 文件到 css 目录（添加 shoelace- 前缀）
-    const themesDir = path.join(shoelaceDist, 'themes');
-    if (fs.existsSync(themesDir)) {
-        // 只处理 light.css 和 dark.css
-        const targetThemes = ['light.css', 'dark.css'];
-        
-        for (const themeFile of targetThemes) {
-            const srcPath = path.join(themesDir, themeFile);
-            if (fs.existsSync(srcPath)) {
-                const destFileName = `shoelace-${themeFile}`;
-                const destPath = path.join(cssOutputDir, destFileName);
-                fs.copyFileSync(srcPath, destPath);
-            }
-        }
-
-        // 复制 shoelace-light.css 为 shoelace.css（兼容现有用户）
-        const lightCssPath = path.join(cssOutputDir, 'shoelace-light.css');
-        if (fs.existsSync(lightCssPath)) {
-            const compatPath = path.join(cssOutputDir, 'shoelace.css');
-            fs.copyFileSync(lightCssPath, compatPath);
-        }
-    }
-
-    // 3. 读取 shoelace 的 version 并生成 version.json
-    const shoelacePkgPath = path.join(shoelaceRoot, 'package.json');
-    if (fs.existsSync(shoelacePkgPath)) {
-        const shoelacePkg = JSON.parse(fs.readFileSync(shoelacePkgPath, 'utf-8'));
-        const versionJson = { version: shoelacePkg.version };
-        const versionOutputPath = path.join(outputDir, 'version.json');
-        fs.writeFileSync(versionOutputPath, JSON.stringify(versionJson, null, 2));
-    }
-
-    console.log('[shoelace] All shoelace resources processed successfully!');
+// 校验：指定了组件名但没有指定 type
+if (components.length > 0 && !type) {
+    console.error(`\n${pc.red(pc.bold('Error:'))} The ${pc.yellow('--type')} option is required when specifying names`);
+    console.error(`\n${pc.dim('Usage:')}`);
+    console.error(pc.dim(` npm run build ${components[0]} --type=frontend`));
+    console.error(pc.dim(` npm run build ${components[0]} --type=controller`));
+    console.error(`\nAvailable type values: ${pc.cyan('frontend')}, ${pc.cyan('controller')}\n`);
+    process.exit(1);
 }
 
-// 单个组件构建函数
-async function buildComponent(componentName: string, entryFile: string) {
-    const logPrefix = isWatch ? '[Rebuild] ' : '';
-    console.log(`${logPrefix}Building component: ${componentName}...`);
-
-    process.env.TARGET_COMPONENT = componentName;
-    process.env.ENTRY_FILE = entryFile;
-
+// 构建前端
+function buildFrontend(comps: string[]): void {
+    const args: string = comps.length > 0 ? comps.join(' ') : '';
     try {
-        await build({
-            configFile: path.resolve(process.cwd(), 'vite.config.ts'),
-            mode: buildMode
-        });
-        if (isWatch) {
-            console.log(`[Success] ${componentName} built.`);
-        }
-    } catch (error) {
-        console.error(`[Error] Failed to build ${componentName}:`, error);
-        throw error;
+        execSync(`tsx scripts/buildFrontend.ts ${args}`, { stdio: 'inherit' });
+    } catch {
+        process.exit(1);
     }
 }
 
-async function run() {
-    console.log(`Starting build in ${buildMode} mode${isWatch ? ' (watching)' : ''}...`);
-
-    // 1. 生成所有入口文件
-    const entryPoints = generateEntries(COMPONENTS_DIR, TEMP_ENTRY_DIR);
-    const components = Object.keys(entryPoints);
-
-    const cleanup = () => {
-        if (fs.existsSync(TEMP_ENTRY_DIR)) {
-            fs.rmSync(TEMP_ENTRY_DIR, { recursive: true, force: true });
-        }
-    };
-
-    if (components.length === 0) {
-        console.log('No components found to build.');
-        if (!isWatch) {
-            cleanup();
-        }
-        return;
+// 构建 controller
+function buildController(comps: string[], targetEnv: string | undefined): void {
+    const args: string = comps.length > 0 ? comps.join(' ') : '';
+    const envArg: string = targetEnv ? `-e ${targetEnv}` : '';
+    try {
+        execSync(`tsx scripts/buildController.ts ${args} ${envArg}`.trim(), { stdio: 'inherit' });
+    } catch {
+        process.exit(1);
     }
-
-    // 2. 执行全量构建（Watch 模式下作为初始构建）
-    for (const componentName of components) {
-        try {
-            await buildComponent(componentName, entryPoints[componentName]);
-        } catch (error) {
-            console.error(error);
-            if (!isWatch) {
-                cleanup();
-                process.exit(1);
-            }
-        }
-    }
-
-    if (!isWatch) {
-        // 非 Watch 模式：处理 shoelace 资源，然后清理临时目录并退出
-        processShoelaceAssets();
-        cleanup();
-        console.log('All components built successfully!');
-        return;
-    }
-
-    // 3. Watch 模式：启动监听
-    console.log('Initial build complete. Watching for changes...');
-
-    const watcher = chokidar.watch(COMPONENTS_DIR, {
-        ignored: /(^|[/\\])\../, // 忽略点文件
-        persistent: true,
-        ignoreInitial: true
-    });
-
-    // 组件构建任务队列（简单的防抖映射）
-    const buildTasks: Record<string, NodeJS.Timeout> = {};
-
-    const handleFileChange = (filePath: string) => {
-        // 解析组件名
-        const relativePath = path.relative(COMPONENTS_DIR, filePath);
-        const componentName = relativePath.split(path.sep)[0];
-
-        if (!componentName || !entryPoints[componentName]) {
-            return;
-        }
-
-        // 防抖处理
-        if (buildTasks[componentName]) {
-            clearTimeout(buildTasks[componentName]);
-        }
-
-        buildTasks[componentName] = setTimeout(() => {
-            buildComponent(componentName, entryPoints[componentName]).catch(() => {
-                // error already logged
-            });
-            delete buildTasks[componentName];
-        }, 300);
-    };
-
-    watcher
-        .on('add', handleFileChange)
-        .on('change', handleFileChange)
-        .on('unlink', handleFileChange);
-
-    // Handle process exit
-    process.on('SIGINT', () => {
-        cleanup();
-        process.exit();
-    });
 }
 
-run();
+/**
+ * 递归查找指定扩展名的文件
+ * @param dir - 目录路径
+ * @param ext - 文件扩展名（如 '.kwp'）
+ * @returns 匹配的文件路径数组
+ */
+function findFilesByExt(dir: string, ext: string): string[] {
+    const results: string[] = [];
+    if (!existsSync(dir)) {
+        return results;
+    }
+    const items = readdirSync(dir);
+    for (const item of items) {
+        const fullPath = join(dir, item);
+        if (statSync(fullPath).isDirectory()) {
+            results.push(...findFilesByExt(fullPath, ext));
+        } else if (item.endsWith(ext)) {
+            results.push(fullPath);
+        }
+    }
+    return results;
+}
+
+/**
+ * 拷贝元数据文件到 dist/metadata 目录
+ */
+function copyMetadata(): void {
+    const destDir: string = 'dist/metadata';
+    mkdirSync(destDir, { recursive: true });
+
+    // 拷贝 pages 下的 .kwp 文件
+    const kwpFiles: string[] = findFilesByExt('app/pages', '.kwp');
+    for (const file of kwpFiles) {
+        const destFile: string = join(destDir, basename(file));
+        copyFileSync(file, destFile);
+    }
+
+    // 拷贝 app/kwc 下的 .kwc 文件
+    const kwcFiles: string[] = findFilesByExt('app/kwc', '.kwc');
+    for (const file of kwcFiles) {
+        const destFile: string = join(destDir, basename(file));
+        copyFileSync(file, destFile);
+    }
+
+    const total: number = kwpFiles.length + kwcFiles.length;
+    if (total > 0) {
+        console.log(pc.green(`\nCopied ${total} metadata file(s) to dist/metadata`));
+    }
+}
+
+// 根据 type 执行对应构建
+if (!type) {
+    // 无参数：构建全部，先清理整个 dist 目录
+    cleanDist();
+    buildFrontend([]);
+    buildController([], env);
+    copyMetadata();
+} else if (type === 'frontend') {
+    buildFrontend(components);
+} else if (type === 'controller') {
+    buildController(components, env);
+} else {
+    console.error(`\n${pc.red(pc.bold('Error:'))} Unknown type value ${pc.yellow(`"${type}"`)}`);
+    console.error(`Available type values: ${pc.cyan('frontend')}, ${pc.cyan('controller')}\n`);
+    process.exit(1);
+}
