@@ -22,7 +22,6 @@ const copyStaticPlugin = () => {
                 copyDirRecursive(srcPath, destPath);
             } else {
                 fs.copyFileSync(srcPath, destPath);
-                console.log(`[copy-static] Copied ${entry.name} to ${destPath}`);
             }
         });
     };
