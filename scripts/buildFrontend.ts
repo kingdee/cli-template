@@ -28,6 +28,27 @@ function getAvailableComponents(): string[] {
 }
 
 /**
+ * 带重试的 rmSync，遇到 ENOTEMPTY 时短暂等待后重试
+ */
+function robustRmSync(target: string, maxRetries = 3): void {
+    for (let i = 0; i <= maxRetries; i++) {
+        try {
+            fs.rmSync(target, { recursive: true, force: true });
+            return;
+        } catch (err: any) {
+            if (err.code === 'ENOTEMPTY' && i < maxRetries) {
+                const delay = 100 * (i + 1);
+                console.log(`Retry ${i + 1}/${maxRetries} removing ${target} (ENOTEMPTY)...`);
+                const start = Date.now();
+                while (Date.now() - start < delay) { /* busy wait */ }
+            } else {
+                throw err;
+            }
+        }
+    }
+}
+
+/**
  * 清理前端构建目录
  * @param componentNames - 如果指定，只清理这些组件的输出目录；否则清理全部
  */
@@ -38,7 +59,7 @@ function cleanFrontendDirs(componentNames?: string[]): void {
             const componentDir = `dist/kwc/${name}`;
             if (fs.existsSync(componentDir)) {
                 console.log(`Cleaning ${componentDir}...`);
-                fs.rmSync(componentDir, { recursive: true, force: true });
+                robustRmSync(componentDir);
             }
         }
     } else {
@@ -47,7 +68,7 @@ function cleanFrontendDirs(componentNames?: string[]): void {
         for (const dir of frontendDirs) {
             if (fs.existsSync(dir)) {
                 console.log(`Cleaning ${dir}...`);
-                fs.rmSync(dir, { recursive: true, force: true });
+                robustRmSync(dir);
             }
         }
     }
@@ -55,6 +76,7 @@ function cleanFrontendDirs(componentNames?: string[]): void {
 
 /**
  * 递归复制目录（兼容 Node.js 10+）
+ * 跳过 .DS_Store 文件，避免 macOS 下删除目录时 ENOTEMPTY
  */
 function copyDirectory(src: string, dest: string) {
     if (!fs.existsSync(dest)) {
@@ -63,6 +85,8 @@ function copyDirectory(src: string, dest: string) {
 
     const entries = fs.readdirSync(src, { withFileTypes: true });
     for (const entry of entries) {
+        if (entry.name === '.DS_Store') continue;
+
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
 
@@ -109,7 +133,7 @@ function processShoelaceAssets() {
     if (fs.existsSync(themesDir)) {
         // 只处理 light.css 和 dark.css
         const targetThemes = ['light.css', 'dark.css'];
-        
+
         for (const themeFile of targetThemes) {
             const srcPath = path.join(themesDir, themeFile);
             if (fs.existsSync(srcPath)) {

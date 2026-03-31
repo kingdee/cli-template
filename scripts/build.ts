@@ -24,11 +24,33 @@ const env: string | undefined = process.env.npm_config_env || process.env.npm_co
 
 /**
  * 清理 dist 目录（全量构建时使用）
+ * 带重试逻辑，防止 macOS .DS_Store 导致 ENOTEMPTY
  */
 function cleanDist(): void {
     if (existsSync('dist')) {
         console.log('Cleaning dist directory...');
-        rmSync('dist', { recursive: true, force: true });
+        robustRmSync('dist');
+    }
+}
+
+/**
+ * 带重试的 rmSync，遇到 ENOTEMPTY 时短暂等待后重试
+ */
+function robustRmSync(target: string, maxRetries = 3): void {
+    for (let i = 0; i <= maxRetries; i++) {
+        try {
+            rmSync(target, { recursive: true, force: true });
+            return;
+        } catch (err: any) {
+            if (err.code === 'ENOTEMPTY' && i < maxRetries) {
+                const delay = 100 * (i + 1);
+                console.log(`Retry ${i + 1}/${maxRetries} removing ${target} (ENOTEMPTY)...`);
+                const start = Date.now();
+                while (Date.now() - start < delay) { /* busy wait */ }
+            } else {
+                throw err;
+            }
+        }
     }
 }
 
