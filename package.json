@@ -5,8 +5,10 @@
     "scripts": {
         "dev": "vite",
         "build": "tsx scripts/build.ts --mode production",
+        "build:frontend": "tsx scripts/buildFrontend.ts --mode production",
+        "build:controller": "tsx scripts/buildController.ts --mode production",
         "server": "tsx server.ts",
-        "debug": "tsx scripts/build.ts --watch",
+        "debug": "tsx scripts/buildFrontend.ts --watch",
         "preview": "vite preview",
         "test": "vitest",
         "lint": "eslint .",
@@ -40,6 +42,7 @@
         "vite-plugin-css-injected-by-js": "^3.5.2",
         "vitest": "^1.0.0",
         "vue-eslint-parser": "^10.2.0",
-        "vue-tsc": "^3.2.2"
+        "vue-tsc": "^3.2.2",
+        "minimist": "^1.2.8"
     }
 }
