@@ -15,12 +15,34 @@ const components = argv._;  // 位置参数（组件名）
 const env = process.env.npm_config_env || process.env.npm_config_target_env || argv.e;
 
 /**
+ * 带重试的目录删除（应对 macOS .DS_Store 导致的 ENOTEMPTY）
+ * @param {string} dir - 目录路径
+ * @param {number} retries - 最大重试次数
+ */
+function rmSyncRetry(dir, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            rmSync(dir, { recursive: true, force: true });
+            return;
+        } catch (err) {
+            if (err.code === 'ENOTEMPTY' && i < retries - 1) {
+                const waitMs = 100 * (i + 1);
+                const start = Date.now();
+                while (Date.now() - start < waitMs) { /* busy wait */ }
+            } else {
+                throw err;
+            }
+        }
+    }
+}
+
+/**
  * 清理 dist 目录（全量构建时使用）
  */
 function cleanDist() {
     if (existsSync('dist')) {
         console.log('Cleaning dist directory...');
-        rmSync('dist', { recursive: true, force: true });
+        rmSyncRetry('dist');
     }
 }
 

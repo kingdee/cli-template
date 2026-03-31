@@ -33,6 +33,28 @@ function getAvailableComponents() {
 }
 
 /**
+ * 带重试的目录删除（应对 macOS .DS_Store 导致的 ENOTEMPTY）
+ * @param {string} dir - 目录路径
+ * @param {number} retries - 最大重试次数
+ */
+function rmSyncRetry(dir, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            fs.rmSync(dir, { recursive: true, force: true });
+            return;
+        } catch (err) {
+            if (err.code === 'ENOTEMPTY' && i < retries - 1) {
+                const waitMs = 100 * (i + 1);
+                const start = Date.now();
+                while (Date.now() - start < waitMs) { /* busy wait */ }
+            } else {
+                throw err;
+            }
+        }
+    }
+}
+
+/**
  * 清理前端构建目录
  * @param {string[]} [componentNames] - 如果指定，只清理这些组件的输出目录；否则清理全部
  */
@@ -43,7 +65,7 @@ function cleanFrontendDirs(componentNames) {
             const componentDir = `dist/kwc/${name}`;
             if (fs.existsSync(componentDir)) {
                 console.log(`Cleaning ${componentDir}...`);
-                fs.rmSync(componentDir, { recursive: true, force: true });
+                rmSyncRetry(componentDir);
             }
         }
     } else {
@@ -52,23 +74,14 @@ function cleanFrontendDirs(componentNames) {
         for (const dir of frontendDirs) {
             if (fs.existsSync(dir)) {
                 console.log(`Cleaning ${dir}...`);
-                try {
-                    fs.rmSync(dir, { recursive: true, force: true });
-                } catch (e) {
-                    // macOS .DS_Store 可能导致 ENOTEMPTY，重试一次
-                    if (e.code === 'ENOTEMPTY') {
-                        fs.rmSync(dir, { recursive: true, force: true });
-                    } else {
-                        throw e;
-                    }
-                }
+                rmSyncRetry(dir);
             }
         }
     }
 }
 
 /**
- * 递归拷贝目录（兼容 Node.js 10+）
+ * 递归拷贝目录（兼容 Node.js 10+），跳过 .DS_Store 文件
  * @param {string} src 源目录
  * @param {string} dest 目标目录
  */
@@ -78,6 +91,7 @@ function copyDirectory(src, dest) {
     }
     const entries = fs.readdirSync(src, { withFileTypes: true });
     for (const entry of entries) {
+        if (entry.name === '.DS_Store') continue;
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
         if (entry.isDirectory()) {
