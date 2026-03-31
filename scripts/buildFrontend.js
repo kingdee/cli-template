@@ -9,14 +9,34 @@ const argv = minimist(process.argv.slice(2));
 const isWatch = argv.watch || false;
 const specifiedComponents = argv._;  // 位置参数（组件名）
 
-// 清理前端构建相关目录（仅清理 dist/kwc 和 dist/shoelace，不影响其他构建产物）
-const frontendDirs = ['dist/kwc', 'dist/shoelace'];
-for (const dir of frontendDirs) {
-    if (existsSync(dir)) {
-        console.log(`Cleaning ${dir}...`);
-        rmSync(dir, { recursive: true, force: true });
+/**
+ * 清理前端构建目录
+ * 如果指定了组件名，只清理这些组件的输出目录；否则清除 dist/kwc 和 dist/shoelace
+ */
+function cleanFrontendDirs(componentNames) {
+    if (componentNames && componentNames.length > 0) {
+        // 只清理指定组件的输出目录
+        for (const name of componentNames) {
+            const dir = join('dist/kwc', name);
+            if (existsSync(dir)) {
+                console.log(`Cleaning ${dir}...`);
+                rmSync(dir, { recursive: true, force: true });
+            }
+        }
+    } else {
+        // 全量清理
+        const frontendDirs = ['dist/kwc', 'dist/shoelace'];
+        for (const dir of frontendDirs) {
+            if (existsSync(dir)) {
+                console.log(`Cleaning ${dir}...`);
+                rmSync(dir, { recursive: true, force: true });
+            }
+        }
     }
 }
+
+// 根据是否指定组件决定清理范围
+cleanFrontendDirs(specifiedComponents.length > 0 ? specifiedComponents : undefined);
 
 /**
  * Recursively copy a directory (compatible with Node.js < 16.7)
@@ -122,7 +142,7 @@ if (specifiedComponents.length > 0) {
     // 验证指定的组件是否存在
     const validComponents = [];
     const invalidComponents = [];
-    
+
     for (const comp of specifiedComponents) {
         if (componentFolders.includes(comp)) {
             validComponents.push(comp);
@@ -130,17 +150,17 @@ if (specifiedComponents.length > 0) {
             invalidComponents.push(comp);
         }
     }
-    
+
     if (invalidComponents.length > 0) {
         console.warn(`\n${pc.yellow('Warning:')} The following components were not found and will be skipped: ${pc.yellow(invalidComponents.join(', '))}`);
         console.log(`Available components: ${pc.dim(componentFolders.join(', '))}\n`);
     }
-    
+
     if (validComponents.length === 0) {
         console.error(`\n${pc.red(pc.bold('Error:'))} No valid components specified.\n`);
         process.exit(1);
     }
-    
+
     componentFolders = validComponents;
     console.log(`\nBuilding specified components: ${validComponents.join(', ')}\n`);
 }
