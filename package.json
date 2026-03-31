@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/build.js --mode production",
+    "build:frontend": "node scripts/buildFrontend.js --mode production",
+    "build:controller": "node scripts/buildController.js --mode production",
     "server": "node server.js",
-    "debug": "node scripts/build.js --watch",
+    "debug": "node scripts/buildFrontend.js --watch",
     "preview": "vite preview",
     "test": "vitest",
     "lint": "eslint .",
@@ -30,6 +32,7 @@
     "terser": "^5.44.1",
     "vite": "^5.0.0",
     "vite-plugin-css-injected-by-js": "^3.5.2",
-    "vitest": "^1.0.0"
+    "vitest": "^1.0.0",
+    "minimist": "^1.2.8"
   }
 }
