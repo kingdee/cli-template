@@ -29,33 +29,51 @@ function getAvailableComponents(): string[] {
 }
 
 /**
- * 清理前端构建目录
- * @param componentNames - 如果指定，只清理这些组件的输出目录；否则清理全部
+ * 带重试的目录删除（应对 macOS .DS_Store 导致的 ENOTEMPTY）
  */
-function cleanFrontendDirs(componentNames?: string[]): void {
-    if (componentNames && componentNames.length > 0) {
-        // 指定组件：只清理对应组件的输出目录
-        for (const name of componentNames) {
-            const componentDir = `dist/kwc/${name}`;
-            if (fs.existsSync(componentDir)) {
-                console.log(`Cleaning ${componentDir}...`);
-                fs.rmSync(componentDir, { recursive: true, force: true });
-            }
-        }
-    } else {
-        // 全量构建：清理整个 dist/kwc 和 dist/shoelace
-        const frontendDirs = ['dist/kwc', 'dist/shoelace'];
-        for (const dir of frontendDirs) {
-            if (fs.existsSync(dir)) {
-                console.log(`Cleaning ${dir}...`);
-                fs.rmSync(dir, { recursive: true, force: true });
+function rmSyncRetry(dir: string, retries = 3): void {
+    for (let i = 0; i < retries; i++) {
+        try {
+            fs.rmSync(dir, { recursive: true, force: true });
+            return;
+        } catch (err: any) {
+            if (err.code === 'ENOTEMPTY' && i < retries - 1) {
+                const waitMs = 100 * (i + 1);
+                const start = Date.now();
+                while (Date.now() - start < waitMs) { /* busy wait */ }
+            } else {
+                throw err;
             }
         }
     }
 }
 
 /**
- * 递归复制目录（兼容 Node.js 10+）
+ * 清理前端构建目录
+ * @param componentNames - 如果指定，只清理这些组件的输出目录；否则清理全部
+ */
+function cleanFrontendDirs(componentNames?: string[]): void {
+    if (componentNames && componentNames.length > 0) {
+        for (const name of componentNames) {
+            const componentDir = `dist/kwc/${name}`;
+            if (fs.existsSync(componentDir)) {
+                console.log(`Cleaning ${componentDir}...`);
+                rmSyncRetry(componentDir);
+            }
+        }
+    } else {
+        const frontendDirs = ['dist/kwc', 'dist/shoelace'];
+        for (const dir of frontendDirs) {
+            if (fs.existsSync(dir)) {
+                console.log(`Cleaning ${dir}...`);
+                rmSyncRetry(dir);
+            }
+        }
+    }
+}
+
+/**
+ * 递归复制目录（兼容 Node.js 10+），跳过 .DS_Store 文件
  */
 function copyDirectory(src: string, dest: string) {
     if (!fs.existsSync(dest)) {
@@ -64,6 +82,8 @@ function copyDirectory(src: string, dest: string) {
 
     const entries = fs.readdirSync(src, { withFileTypes: true });
     for (const entry of entries) {
+        if (entry.name === '.DS_Store') continue;
+
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
 
