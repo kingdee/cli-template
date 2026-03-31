@@ -10,6 +10,27 @@ const isWatch = argv.watch || false;
 const specifiedComponents = argv._;  // 位置参数（组件名）
 
 /**
+ * 带重试的目录删除（macOS 上 Spotlight/Finder 可能在删除过程中写入 .DS_Store 导致 ENOTEMPTY）
+ */
+function rmSyncRetry(dir, retries = 3, delay = 200) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            rmSync(dir, { recursive: true, force: true });
+            return;
+        } catch (err) {
+            if (err.code === 'ENOTEMPTY' && i < retries - 1) {
+                const ms = delay * (i + 1);
+                console.log(`  rmSync ENOTEMPTY, retrying in ${ms}ms...`);
+                const start = Date.now();
+                while (Date.now() - start < ms) { /* busy wait */ }
+            } else {
+                throw err;
+            }
+        }
+    }
+}
+
+/**
  * 清理前端构建目录
  * 如果指定了组件名，只清理这些组件的输出目录；否则清除 dist/kwc 和 dist/shoelace
  */
@@ -20,7 +41,7 @@ function cleanFrontendDirs(componentNames) {
             const dir = join('dist/kwc', name);
             if (existsSync(dir)) {
                 console.log(`Cleaning ${dir}...`);
-                rmSync(dir, { recursive: true, force: true });
+                rmSyncRetry(dir);
             }
         }
     } else {
@@ -29,7 +50,7 @@ function cleanFrontendDirs(componentNames) {
         for (const dir of frontendDirs) {
             if (existsSync(dir)) {
                 console.log(`Cleaning ${dir}...`);
-                rmSync(dir, { recursive: true, force: true });
+                rmSyncRetry(dir);
             }
         }
     }
@@ -39,11 +60,12 @@ function cleanFrontendDirs(componentNames) {
 cleanFrontendDirs(specifiedComponents.length > 0 ? specifiedComponents : undefined);
 
 /**
- * Recursively copy a directory (compatible with Node.js < 16.7)
+ * Recursively copy a directory, skipping .DS_Store files
  */
 function copyDir(src, dest) {
     mkdirSync(dest, { recursive: true });
     for (const entry of readdirSync(src, { withFileTypes: true })) {
+        if (entry.name === '.DS_Store') continue;
         const srcPath = join(src, entry.name);
         const destPath = join(dest, entry.name);
         if (entry.isDirectory()) {

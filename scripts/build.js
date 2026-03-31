@@ -15,12 +15,33 @@ const components = argv._;  // 位置参数（组件名）
 const env = process.env.npm_config_env || process.env.npm_config_target_env || argv.e;
 
 /**
+ * 带重试的目录删除（macOS 上 Spotlight/Finder 可能在删除过程中写入 .DS_Store 导致 ENOTEMPTY）
+ */
+function rmSyncRetry(dir, retries = 3, delay = 200) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            rmSync(dir, { recursive: true, force: true });
+            return;
+        } catch (err) {
+            if (err.code === 'ENOTEMPTY' && i < retries - 1) {
+                const ms = delay * (i + 1);
+                console.log(`  rmSync ENOTEMPTY, retrying in ${ms}ms...`);
+                const start = Date.now();
+                while (Date.now() - start < ms) { /* busy wait */ }
+            } else {
+                throw err;
+            }
+        }
+    }
+}
+
+/**
  * 清理 dist 目录（全量构建时使用）
  */
 function cleanDist() {
     if (existsSync('dist')) {
         console.log('Cleaning dist directory...');
-        rmSync('dist', { recursive: true, force: true });
+        rmSyncRetry('dist');
     }
 }
 
