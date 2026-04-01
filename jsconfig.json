@@ -6,7 +6,17 @@
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"]
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    "typeRoots": [
+      "node_modules/@types",
+      "node_modules/@constellation",
+      "node_modules/@cosmic"
+    ],
+    "paths": {
+      "@constellation/*": ["node_modules/@constellation/*"],
+      "@cosmic/*": ["node_modules/@cosmic/*"]
+    }
   },
   "include": [
     "vite.config.js",
