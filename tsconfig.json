@@ -21,10 +21,16 @@
     "noFallthroughCasesInSwitch": true,
     
     "baseUrl": ".",
+    "typeRoots": [
+      "node_modules/@types",
+      "node_modules/@constellation",
+      "node_modules/@cosmic"
+    ],
     "paths": {
-      "@/*": ["app/*"]
-    },
-    "types": ["vitest/globals", "node_modules/@kdcloudjs/shoelace/dist/types/vue"]
+      "@/*": ["app/*"],
+      "@constellation/*": ["node_modules/@constellation/*"],
+      "@cosmic/*": ["node_modules/@cosmic/*"]
+    }
   },
   "include": ["app/**/*.ts", "app/**/*.d.ts", "app/**/*.tsx", "app/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]
