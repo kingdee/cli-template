@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/build.js",
-    "build:frontend": "tsx scripts/buildFrontend.js",
-    "build:controller": "tsx scripts/buildController.js",
+    "build:frontend": "node scripts/buildFrontend.js",
+    "build:controller": "node scripts/buildController.js",
     "server": "node server.js",
     "debug": "node scripts/buildFrontend.js --watch",
     "test": "vitest",
