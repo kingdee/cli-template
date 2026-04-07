@@ -3,13 +3,6 @@ import react from '@vitejs/plugin-react';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
-
-// 获取本机局域网 IP 地址
-const getLocalIP = () =>
-  Object.values(os.networkInterfaces())
-    .flat()
-    .find((i) => (i?.family === 'IPv4' || i?.family === 4) && !i.internal)?.address || 'localhost';
 
 // ========================== 插件定义 ==========================
 // 自定义插件：处理 lang 目录下的 json 文件
@@ -150,8 +143,7 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
     // 公共配置
     server: {
       port: 3000,
-      // open: true,
-      open: `http://${getLocalIP()}:3000`,
+      open: true,
       host: true
     },
     plugins: [
