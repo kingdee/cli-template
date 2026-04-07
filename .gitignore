@@ -125,7 +125,6 @@ dist-ssr
 # Editor directories and files
 .trae
 .idea
-.kd
 .vscode/*
 !.vscode/extensions.json
 *.suo
